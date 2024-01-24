@@ -1,0 +1,27 @@
+{
+  "name": "consumptionwatch",
+  "version": "1.0.0",
+  "description": "app for watching your consumption of fuel",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BorysPresn/consumptionWatch.git"
+  },
+  "keywords": [
+    "consumption"
+  ],
+  "author": "Borys Presniak",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BorysPresn/consumptionWatch/issues"
+  },
+  "homepage": "https://github.com/BorysPresn/consumptionWatch#readme",
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongodb": "^6.3.0"
+  }
+}

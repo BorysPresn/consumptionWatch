@@ -1,0 +1,2 @@
+const { connectToDatabase } = require('./database');
+
