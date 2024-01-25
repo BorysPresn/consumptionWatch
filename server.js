@@ -3,14 +3,15 @@ const app = express();
 const PORT = process.env.PORT || 3000; 
 app.use(express.json());
 
-const { connectToDatabase, insertMileageRecord, getAllMileageRecords, getLastMileageRecord } = require('./database');
-const { calculateMileageData } = require('./calculator');
+const { insertMileageRecord, getAllMileageRecords, getLastMileageRecord } = require('./database');
+const { processData } = require('./calculator');
     
 // Эндпоинт для создания записи о пробеге
 app.post('/mileage', async (req, res) => {
     try {
       const record = req.body;
-      const result = await insertMileageRecord(record);
+      const processedData = processData(record);
+      const result = await insertMileageRecord(processedData);
       
       res.json(result);
     } catch (error) {

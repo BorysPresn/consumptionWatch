@@ -39,10 +39,10 @@ async function connectToDatabase() {
   async function insertMileageRecord(record) {
     const db = await connectToDatabase();
     const mileageCollection = db.collection('mileage');
-    const sucMessage = 'succes!'
+    const succMessage = 'succes!';
     try {
         const result = await mileageCollection.insertOne(record);
-        return result.ops ? result.ops[0] : sucMessage;
+        return result.ops ? result.ops[0] : succMessage;
     } catch (error) {
         console.error(error);
         throw error;
