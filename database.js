@@ -76,4 +76,33 @@ async function deleteAllMileageRecords() {
       throw error;
   }
 }
-module.exports = { connectToDatabase, insertMileageRecord, getAllMileageRecords, getLastMileageRecord, deleteAllMileageRecords };
+
+async function insertInitialSettings(record) {
+  const db = await connectToDatabase();
+  const settingCollection = db.collection('initialSetting');
+  const succMessage = 'succes!';
+  try {
+      const result = await settingCollection.insertOne(record);
+      return result.ops ? result.ops[0] : succMessage;
+  } catch (error) {
+      console.error(error);
+      throw error;
+  }
+}
+
+async function getInitialSettings(userId) {
+  const db = await connectToDatabase();
+  const settingsCollection = db.collection('initialSetting');
+  return settingsCollection.findOne({ userId: userId });
+}
+
+
+module.exports = { 
+  connectToDatabase, 
+  insertMileageRecord, 
+  getAllMileageRecords, 
+  getLastMileageRecord, 
+  deleteAllMileageRecords, 
+  getInitialSettings,
+  insertInitialSettings
+};

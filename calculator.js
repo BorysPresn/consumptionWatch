@@ -1,4 +1,4 @@
-const { connectToDatabase } = require('./database');
+const { getAllMileageRecords } = require("./database");
 
 function processData(data){
     console.log("recived data ", data);
@@ -15,7 +15,25 @@ function processData(data){
     console.log(result);
     return result;
 }
+async function updateStatistic(initialMileage) {
+    let averDailyDistance = 0;
+    let totalFuelConsumed = 0;
+    let averConsumption = 0;
+    let counter = 0;
+    const allData = await getAllMileageRecords();
+    allData.forEach(record => {
+        averDailyDistance += record.dailyDistance;
+        totalFuelConsumed += record.fuel;
+        averConsumption += record.fuelConsumption;
+        counter++;
+    })
+    return {
+        totalTraveled : allData[allData.length-1].totalMileage - initialMileage,
+        averDailyDistance : averDailyDistance / counter,
+        totalFuelConsumed,
+        averConsumption: averConsumption / counter
+    }
+}
 
 
-
-module.exports = { processData };
+module.exports = { processData, updateStatistic };
