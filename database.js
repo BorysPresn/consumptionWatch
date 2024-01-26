@@ -1,4 +1,4 @@
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = "mongodb+srv://boryspresniak:Anubag7981MongoDB@cluster0.ub2nw6k.mongodb.net/?retryWrites=true&w=majority";
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
@@ -120,12 +120,14 @@ async function checkUser(userToFind) {
 async function getInitialMileage(userId) {
   const db = await connectToDatabase();
   const settingsCollection = db.collection('users');
-  const user = await settingsCollection.findOne({ _id: userId });
-  return user.initialMileage;
+  const user = await settingsCollection.findOne({ _id:new ObjectId(userId)});
+  const mileage = user.initialMileage;
+  return mileage;
 }
 
 
-module.exports = { 
+module.exports = {
+  client, 
   connectToDatabase, 
   insertMileageRecord, 
   getAllMileageRecords, 

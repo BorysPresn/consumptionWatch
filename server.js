@@ -4,6 +4,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 const { 
+  client,
   insertMileageRecord, 
   getAllMileageRecords, 
   getLastMileageRecord, 
@@ -76,7 +77,8 @@ app.post('/login', async (req, res) => {
 
 app.get('/users', async (req, res)=> {
   try {
-    const userId = req.query.userId;
+    const userId = req.body.userId;
+    console.log(userId);
     const record = await getInitialMileage(userId);
     res.json(record);
   } catch (error) {
