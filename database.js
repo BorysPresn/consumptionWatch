@@ -1,6 +1,7 @@
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const uri = "mongodb+srv://boryspresniak:Anubag7981MongoDB@cluster0.ub2nw6k.mongodb.net/?retryWrites=true&w=majority";
-
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -19,7 +20,7 @@ async function run() {
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    //await client.close();
   }
 }
 run().catch(console.dir);
@@ -33,8 +34,7 @@ async function connectToDatabase() {
       console.error('Error connecting to MongoDB:', error);
       throw error;
     }
-  }
-
+}
 
   async function insertMileageRecord(record) {
     const db = await connectToDatabase();
@@ -48,7 +48,6 @@ async function connectToDatabase() {
         throw error;
     }
 }
-
 
 async function getAllMileageRecords() {
     const db = await connectToDatabase();
@@ -69,31 +68,60 @@ async function deleteAllMileageRecords() {
 
   try {
       const result = await mileageCollection.deleteMany({});
-      console.log(`${result.deletedCount} записей удалено`);
+      console.log(`${result.deletedCount} records deleted`);
       return result.deletedCount;
   } catch (error) {
-      console.error('Ошибка при удалении записей:', error);
+      console.error('Error during deleting records:', error);
       throw error;
   }
 }
 
-async function insertInitialSettings(record) {
+async function insertNewUser(record) {
   const db = await connectToDatabase();
-  const settingCollection = db.collection('initialSetting');
-  const succMessage = 'succes!';
+  const usersCollection = db.collection('users');
   try {
-      const result = await settingCollection.insertOne(record);
-      return result.ops ? result.ops[0] : succMessage;
+    const hashedPassword = await bcrypt.hash(record.password, saltRounds)
+    const result = await usersCollection.insertOne({
+      ...record,
+      password : hashedPassword
+    });
+    return result.insertedId;
   } catch (error) {
       console.error(error);
       throw error;
   }
 }
 
-async function getInitialSettings(userId) {
+async function checkUser(userToFind) {
+  try {
+    const db = await connectToDatabase();
+    const usersCollection = db.collection('users');
+    const { email, password } = userToFind;
+    const user = await usersCollection.findOne({email : email});
+    
+    if(!user){
+      return {message : 'E-mail is wrong'};
+    } 
+
+    const chekPass = await bcrypt.compare(password, user.password);
+    if(!chekPass) {
+      return { message : 'Password is wrong'}
+    }
+    
+    return {userId : user._id, message : 'ok'};
+    
+  } catch (error) {
+    console.error('Error in checkUser:', error);
+    throw new Error('Error checking user');
+  }
+ 
+}
+
+async function getInitialMileage(userId) {
   const db = await connectToDatabase();
-  const settingsCollection = db.collection('initialSetting');
-  return settingsCollection.findOne({ userId: userId });
+  const settingsCollection = db.collection('users');
+  const user = await settingsCollection.findOne({ _id: userId });
+  return user.initialMileage;
 }
 
 
@@ -103,6 +131,7 @@ module.exports = {
   getAllMileageRecords, 
   getLastMileageRecord, 
   deleteAllMileageRecords, 
-  getInitialSettings,
-  insertInitialSettings
+  getInitialMileage,
+  insertNewUser,
+  checkUser
 };
