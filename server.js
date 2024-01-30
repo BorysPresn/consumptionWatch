@@ -11,11 +11,12 @@ const {
   deleteAllMileageRecords, 
   getInitialMileage, 
   insertNewUser,
-  checkUser} = require('./database');
+  checkUser
+} = require('./database');
 const { processData, updateStatistic } = require('./calculator');
     
 // Эндпоинт для создания записи о пробеге
-app.post('/mileage', async (req, res) => {
+app.post('/addMileage', async (req, res) => {
   try {
       const record = req.body;
       const userId = req.body.userId;
@@ -38,7 +39,7 @@ app.post('/mileage', async (req, res) => {
 });
   
   // Эндпоинт для получения всех записей о пробеге
-app.get('/mileage', async (req, res) => {
+app.get('/history', async (req, res) => {
 
   try {
     const records = await getAllMileageRecords();
