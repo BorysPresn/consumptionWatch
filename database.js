@@ -86,16 +86,17 @@ async function insertNewUser(record) {
   const db = await connectToDatabase();
   const usersCollection = db.collection('users');
   try {
+    console.log('Hashing password:', record.password, 'with salt rounds:', saltRounds);
     const hashedPassword = await bcrypt.hash(record.password, saltRounds);
     const alreadyExists = await usersCollection.findOne({email: record.email})
     if(alreadyExists){
-      return ({success : false, message : "User already exists"})
+      return ({success : false, message : "This e-mail already exists"})
     }
     const result = await usersCollection.insertOne({
       ...record,
       password : hashedPassword
     });
-    return {success : true, message : "User registered successfuly", data : {insertedId : result.insertedId}}
+    return {success : true, message : "User registered successfuly", data : result.insertedId}
   } catch (error) {
       console.error(error);
       throw error;
@@ -117,7 +118,7 @@ async function checkUser(userToFind) {
     if(!chekPass) {
       return { success : false, message : 'Password is wrong' }
     }
-    return { success : true, message : "Login successful", data : { userId : user._id }};
+    return { success : true, message : "Login successful", data : user._id };
   } catch (error) {
     console.error('Error in checkUser:', error);
     throw new Error('Error checking user');
@@ -129,12 +130,11 @@ async function getInitialMileage(userId) {
   try{
     const db = await connectToDatabase();
     const settingsCollection = db.collection('users');
-    const user = await settingsCollection.findOne({ _id:new ObjectId(userId)});
+    const user = await settingsCollection.findOne({ userId : userId });
     if(!user){
-      return { success : false, message : 'no user'}
+      return { success : false, message : 'User not finded' };
     }
-    const mileage = user.initialMileage;
-    return { success : true, initialMileage : mileage };
+    return { success : true, message : "User finded", data : user.mileage };
   } catch (error) {
     console.error('Error in getInitialMileage:', error);
     throw new Error('Error getting initial mileage');

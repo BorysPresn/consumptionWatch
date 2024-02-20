@@ -2,6 +2,7 @@ const express = require ('express');
 const app = express();
 const PORT = process.env.PORT || 3000; 
 app.use(express.json());
+app.use(express.static('public'));
 
 const { 
   client,
@@ -23,7 +24,7 @@ app.post('/addMileage', async (req, res) => {
     const initialData = await getInitialMileage(userId);
     const processedData = processData(record);
         
-    const recordInserted = await insertMileageRecord(processedData);
+    await insertMileageRecord(processedData);
 
     const updatedStats = await updateStatistic(initialData.initialMileage, userId);
 
@@ -52,6 +53,7 @@ app.get('/history', async (req, res) => {
 app.post('/register', async (req, res) => {
   try {
     const record = req.body;
+    console.log(record)
     const result = await insertNewUser(record);
     if (!result.success) {
       res.status(400).json({ result })
@@ -67,11 +69,10 @@ app.post('/login', async (req, res) => {
   try {
     const result = await checkUser(req.body);
     if(result.success){
-      res.status(200).json({result});
+      res.status(200).json({ result });
     } else {
-      res.status(400).json({error : result.message})
+      res.status(400).json({ result })
     }
-    
   } catch (error) {
     console.error('Error in /login:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -80,10 +81,10 @@ app.post('/login', async (req, res) => {
 
 app.get('/users', async (req, res)=> {
   try {
-    const userId = req.body.userId;
+    const userId = req.query.userId;
     console.log(userId);
     const record = await getInitialMileage(userId);
-    res.json(record);
+    res.status(200).json(record);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

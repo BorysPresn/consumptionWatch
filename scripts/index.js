@@ -1,2 +1,0 @@
-// cheking cookies for login
-
