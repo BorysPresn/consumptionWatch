@@ -17,11 +17,6 @@ function processData(data){
     return result;
 }
 async function updateStatistic(initialMileage, userId) {
-    let averDailyDistance = 0;
-    let totalFuelConsumed = 0;
-    let averConsumption = 0;
-    let totalMoneySpended = 0;
-    let counter = 0;
     const allData = await getAllMileageRecords(userId);
     if(allData.length == 0){ 
         return { 
@@ -30,10 +25,14 @@ async function updateStatistic(initialMileage, userId) {
         }
     }
     return getStatistic(allData);
-    
 }
 
 function getStatistic(data) {
+    let averDailyDistance = 0;
+    let totalFuelConsumed = 0;
+    let averConsumption = 0;
+    let totalMoneySpended = 0;
+    let counter = 0;
     data.forEach(record => {
         averDailyDistance += record.dailyDistance;
         totalFuelConsumed += record.fuelVolume;
