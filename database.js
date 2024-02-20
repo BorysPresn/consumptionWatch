@@ -36,23 +36,29 @@ async function connectToDatabase() {
     }
 }
 
-  async function insertMileageRecord(record) {
-    const db = await connectToDatabase();
-    const mileageCollection = db.collection('mileage');
-    const succMessage = 'succes!';
-    try {
-        const result = await mileageCollection.insertOne(record);
-        return result.ops ? result.ops[0] : succMessage;
-    } catch (error) {
-        console.error(error);
-        throw error;
-    }
+async function insertMileageRecord(record) {
+  const db = await connectToDatabase();
+  const mileageCollection = db.collection('mileage');
+  try {
+      const result = await mileageCollection.insertOne(record);
+      return {
+        success : true,
+        message : "Record successfuly inserted",
+        data : { result }
+      };
+  } catch (error) {
+      console.error("Error during inserting operation", error);
+      throw error;
+  }
 }
 
-async function getAllMileageRecords() {
+async function getAllMileageRecords(userId) {
     const db = await connectToDatabase();
-    const mileageCollection = db.collection('mileage');
-    return mileageCollection.find({}).toArray();
+    const mileageCollection = db.collection('mileage').find({ _id : userId }).toArray();
+    if (!mileageCollection) {
+      return { success : false, message : "User not found" };
+    }
+    return {success : true, message : "succes", data : mileageCollection}
 }
 
 async function getLastMileageRecord() {
@@ -80,12 +86,16 @@ async function insertNewUser(record) {
   const db = await connectToDatabase();
   const usersCollection = db.collection('users');
   try {
-    const hashedPassword = await bcrypt.hash(record.password, saltRounds)
+    const hashedPassword = await bcrypt.hash(record.password, saltRounds);
+    const alreadyExists = await usersCollection.findOne({email: record.email})
+    if(alreadyExists){
+      return ({success : false, message : "User already exists"})
+    }
     const result = await usersCollection.insertOne({
       ...record,
       password : hashedPassword
     });
-    return result.insertedId;
+    return {success : true, message : "User registered successfuly", data : {insertedId : result.insertedId}}
   } catch (error) {
       console.error(error);
       throw error;
@@ -100,16 +110,14 @@ async function checkUser(userToFind) {
     const user = await usersCollection.findOne({email : email});
     
     if(!user){
-      return {message : 'E-mail is wrong'};
+      return { success : false, message : 'E-mail is wrong' };
     } 
-
     const chekPass = await bcrypt.compare(password, user.password);
+
     if(!chekPass) {
-      return { message : 'Password is wrong'}
+      return { success : false, message : 'Password is wrong' }
     }
-    
-    return {userId : user._id, message : 'ok'};
-    
+    return { success : true, message : "Login successful", data : { userId : user._id }};
   } catch (error) {
     console.error('Error in checkUser:', error);
     throw new Error('Error checking user');
@@ -118,11 +126,19 @@ async function checkUser(userToFind) {
 }
 
 async function getInitialMileage(userId) {
-  const db = await connectToDatabase();
-  const settingsCollection = db.collection('users');
-  const user = await settingsCollection.findOne({ _id:new ObjectId(userId)});
-  const mileage = user.initialMileage;
-  return mileage;
+  try{
+    const db = await connectToDatabase();
+    const settingsCollection = db.collection('users');
+    const user = await settingsCollection.findOne({ _id:new ObjectId(userId)});
+    if(!user){
+      return { success : false, message : 'no user'}
+    }
+    const mileage = user.initialMileage;
+    return { success : true, initialMileage : mileage };
+  } catch (error) {
+    console.error('Error in getInitialMileage:', error);
+    throw new Error('Error getting initial mileage');
+  }
 }
 
 

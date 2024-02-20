@@ -16,15 +16,25 @@ function processData(data){
     console.log(result);
     return result;
 }
-async function updateStatistic(initialMileage) {
+async function updateStatistic(initialMileage, userId) {
     let averDailyDistance = 0;
     let totalFuelConsumed = 0;
     let averConsumption = 0;
     let totalMoneySpended = 0;
     let counter = 0;
-    const allData = await getAllMileageRecords();
-    if(allData.length == 0){ return { message : "No data"}}
-    allData.forEach(record => {
+    const allData = await getAllMileageRecords(userId);
+    if(allData.length == 0){ 
+        return { 
+            success : false,
+            message : "There's no data for statistics yet"
+        }
+    }
+    return getStatistic(allData);
+    
+}
+
+function getStatistic(data) {
+    data.forEach(record => {
         averDailyDistance += record.dailyDistance;
         totalFuelConsumed += record.fuelVolume;
         averConsumption += record.fuelConsumption;
@@ -32,13 +42,16 @@ async function updateStatistic(initialMileage) {
         counter++;
     })
     return {
-        totalTraveled : allData[allData.length-1].totalMileage - initialMileage,
-        averDailyDistance : averDailyDistance / counter,
-        totalFuelConsumed,
-        averConsumption: averConsumption / counter,
-        totalMoneySpended : totalMoneySpended
+        success : true,
+        message : "Statistic was updated successfuly",
+        data : {
+            totalTraveled : allData[allData.length-1].totalMileage - initialMileage,
+            averDailyDistance : averDailyDistance / counter,
+            totalFuelConsumed,
+            averConsumption: averConsumption / counter,
+            totalMoneySpended : totalMoneySpended
+        }
     }
 }
 
-
-module.exports = { processData, updateStatistic };
+module.exports = { processData, updateStatistic, getStatistic };

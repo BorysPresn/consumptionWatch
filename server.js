@@ -13,25 +13,21 @@ const {
   insertNewUser,
   checkUser
 } = require('./database');
-const { processData, updateStatistic } = require('./calculator');
+const { processData, updateStatistic, getStatistic } = require('./calculator');
     
 // Эндпоинт для создания записи о пробеге
 app.post('/addMileage', async (req, res) => {
   try {
-      const record = req.body;
-      const userId = req.body.userId;
-      const initialData = await getInitialMileage(userId);
-      const processedData = processData(record);
-          
-      await insertMileageRecord(processedData);
+    const record = req.body;
+    const userId = req.body.userId;
+    const initialData = await getInitialMileage(userId);
+    const processedData = processData(record);
+        
+    const recordInserted = await insertMileageRecord(processedData);
 
-      const updatedStats = await updateStatistic(initialData.initialMileage);
-      if(updatedStats.message === "No data"){
-        res.status(200).json({message : "there's no data for statistics yet"})
-      } else {
-        res.status(200).json(updatedStats);
-      }
-      
+    const updatedStats = await updateStatistic(initialData.initialMileage, userId);
+
+    res.status(200).json(updatedStats);
   } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
@@ -40,10 +36,13 @@ app.post('/addMileage', async (req, res) => {
   
   // Эндпоинт для получения всех записей о пробеге
 app.get('/history', async (req, res) => {
-
+  const userId = req.query.userId;
   try {
-    const records = await getAllMileageRecords();
-    res.json(records);
+    const records = await getAllMileageRecords(userId);
+    if (!records.success){
+      res.status(400).json({ records });
+    }
+    res.status(200).json(records);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -54,7 +53,10 @@ app.post('/register', async (req, res) => {
   try {
     const record = req.body;
     const result = await insertNewUser(record);
-    res.status(200).json({userId : result, status : 'succes!'});
+    if (!result.success) {
+      res.status(400).json({ result })
+    }
+    res.status(200).json({ result });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -64,8 +66,8 @@ app.post('/register', async (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const result = await checkUser(req.body);
-    if(result.message === "ok"){
-      res.status(200).json({userId : result.userId});
+    if(result.success){
+      res.status(200).json({result});
     } else {
       res.status(400).json({error : result.message})
     }
