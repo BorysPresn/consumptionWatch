@@ -43,7 +43,7 @@ async function insertMileageRecord(record) {
       const result = await mileageCollection.insertOne(record);
       return {
         success : true,
-        message : "Record successfuly inserted",
+        message : "Record successfully inserted",
         data : { result }
       };
   } catch (error) {
@@ -68,19 +68,19 @@ async function getLastMileageRecord() {
     return mileageCollection.findOne({}, { sort: { _id: -1 } });
 }
 
-async function deleteAllMileageRecords() {
-  const db = await connectToDatabase();
-  const mileageCollection = db.collection('mileage');
+// async function deleteAllMileageRecords() {
+//   const db = await connectToDatabase();
+//   const mileageCollection = db.collection('mileage');
 
-  try {
-      const result = await mileageCollection.deleteMany({});
-      console.log(`${result.deletedCount} records deleted`);
-      return result.deletedCount;
-  } catch (error) {
-      console.error('Error during deleting records:', error);
-      throw error;
-  }
-}
+//   try {
+//       const result = await mileageCollection.deleteMany({});
+//       console.log(`${result.deletedCount} records deleted`);
+//       return result.deletedCount;
+//   } catch (error) {
+//       console.error('Error during deleting records:', error);
+//       throw error;
+//   }
+// }
 
 async function insertNewUser(record) {
   const db = await connectToDatabase();
@@ -96,7 +96,7 @@ async function insertNewUser(record) {
       ...record,
       password : hashedPassword
     });
-    return {success : true, message : "User registered successfuly", data : result.insertedId}
+    return {success : true, message : "User registered successfully", data : result.insertedId}
   } catch (error) {
       console.error(error);
       throw error;
@@ -132,7 +132,7 @@ async function getInitialMileage(userId) {
     const settingsCollection = db.collection('users');
     const user = await settingsCollection.findOne({ userId : userId });
     if(!user){
-      return { success : false, message : 'User not finded' };
+      return { success : false, message : 'User is not finded' };
     }
     return { success : true, message : "User finded", data : user.mileage };
   } catch (error) {

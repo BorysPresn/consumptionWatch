@@ -9,6 +9,7 @@ function processData(data){
     let result = {
         date : now.toLocaleDateString("ru-RU"),
         time : now.toLocaleTimeString({ hour12 : false }),
+        userId : data.userId,
         ...data,
         fuelConsumption : fuelConsumption,
         moneySpend : moneySpend
@@ -42,7 +43,7 @@ function getStatistic(data) {
     })
     return {
         success : true,
-        message : "Statistic was updated successfuly",
+        message : "Statistic was updated successfully",
         data : {
             totalTraveled : allData[allData.length-1].totalMileage - initialMileage,
             averDailyDistance : averDailyDistance / counter,

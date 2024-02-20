@@ -3,6 +3,8 @@ const app = express();
 const PORT = process.env.PORT || 3000; 
 app.use(express.json());
 app.use(express.static('public'));
+const jwt = require('jsonwebtoken');
+const secretKey = 'this_is_a_very_secret_key';
 
 const { 
   client,
@@ -69,6 +71,7 @@ app.post('/login', async (req, res) => {
   try {
     const result = await checkUser(req.body);
     if(result.success){
+      const token = jwt.sign({ userId: user._id, email: user.email }, secretKey, { expiresIn: '1h' });
       res.status(200).json({ result });
     } else {
       res.status(400).json({ result })
