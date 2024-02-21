@@ -2,6 +2,8 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = "mongodb+srv://boryspresniak:Anubag7981MongoDB@cluster0.ub2nw6k.mongodb.net/?retryWrites=true&w=majority";
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
+const jwt = require('jsonwebtoken');
+const secretKey = 'this_is_a_very_secret_key';
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {
@@ -68,35 +70,29 @@ async function getLastMileageRecord() {
     return mileageCollection.findOne({}, { sort: { _id: -1 } });
 }
 
-// async function deleteAllMileageRecords() {
-//   const db = await connectToDatabase();
-//   const mileageCollection = db.collection('mileage');
-
-//   try {
-//       const result = await mileageCollection.deleteMany({});
-//       console.log(`${result.deletedCount} records deleted`);
-//       return result.deletedCount;
-//   } catch (error) {
-//       console.error('Error during deleting records:', error);
-//       throw error;
-//   }
-// }
-
 async function insertNewUser(record) {
   const db = await connectToDatabase();
   const usersCollection = db.collection('users');
   try {
     console.log('Hashing password:', record.password, 'with salt rounds:', saltRounds);
     const hashedPassword = await bcrypt.hash(record.password, saltRounds);
-    const alreadyExists = await usersCollection.findOne({email: record.email})
+    const alreadyExists = await usersCollection.findOne({email: record.email});
     if(alreadyExists){
-      return ({success : false, message : "This e-mail already exists"})
+      return ({success : false, message : "This e-mail already exists"});
     }
     const result = await usersCollection.insertOne({
       ...record,
       password : hashedPassword
     });
-    return {success : true, message : "User registered successfully", data : result.insertedId}
+    const token = jwt.sign({ userId: user._id, email: user.email }, secretKey, { expiresIn: '1h' });
+    return {
+      success : true, 
+      message : "User registered successfully", 
+      data :{
+        userId : result.insertedId, 
+        token : token 
+      }
+    };
   } catch (error) {
       console.error(error);
       throw error;
@@ -118,7 +114,9 @@ async function checkUser(userToFind) {
     if(!chekPass) {
       return { success : false, message : 'Password is wrong' }
     }
-    return { success : true, message : "Login successful", data : user._id };
+    const token = jwt.sign({ userId: user._id, email: user.email }, secretKey, { expiresIn: '1h' });
+
+    return { success : true, message : "Login successful", data :{ userId : user._id, token : token }};
   } catch (error) {
     console.error('Error in checkUser:', error);
     throw new Error('Error checking user');

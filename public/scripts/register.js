@@ -1,7 +1,3 @@
-// cheking cookies for login
-
-// main logic
-
 //register 
 
 document.getElementById('registration-form').addEventListener('submit', async function(e){
@@ -13,7 +9,7 @@ document.getElementById('registration-form').addEventListener('submit', async fu
         initialMileage : document.getElementById('initial-mileage').value
     };
 
-    // Отправляем данные на сервер
+    // sending data to server
     const response = await fetch('/register', {
         method: 'POST',
         headers: {
@@ -22,5 +18,10 @@ document.getElementById('registration-form').addEventListener('submit', async fu
         body: JSON.stringify(formData),
     });
     const data = await response.json();
+    document.cookie = `token=${data.data.token};path=/;max-age=1800;secure`;
+    window.location.href = '/index.html';
+
     console.log('Response:', data);
 });
+
+
