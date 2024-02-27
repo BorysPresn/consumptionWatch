@@ -94,6 +94,8 @@ app.get('/lastRecord', async (req, res) => {
     const userId = req.query.userId;
     const response = await getLastMileageRecord(userId);
     if(response){
+      delete response.userId;
+      delete response._id;
       res.status(200).json(response);
     } else {
       res.status(400).json("no data");

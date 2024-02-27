@@ -60,6 +60,9 @@ body {
     justify-content: space-between;
     gap: 5px;
 }
+.error {
+    border: .25rem solid #871919c4;
+}
 @media (max-width: 502px) {
     .header-title h3{
         font-size: 14px;
