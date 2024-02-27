@@ -6,7 +6,7 @@ document.getElementById('registration-form').addEventListener('submit', async fu
     const formData = {
         email : document.getElementById('register-email').value,
         password : document.getElementById('register-password').value,
-        initialMileage : document.getElementById('initial-mileage').value
+        initialMileage : +document.getElementById('initial-mileage').value
     };
 
     // sending data to server
@@ -18,7 +18,8 @@ document.getElementById('registration-form').addEventListener('submit', async fu
         body: JSON.stringify(formData),
     });
     const data = await response.json();
-    document.cookie = `token=${data.data.token};path=/;max-age=1800;secure`;
+    document.cookie = `token=${data.token};path=/;max-age=1800;secure;HttpOnly`;
+    document.cookie = `userId=${data.userId};path=/max-age=1800;secure;httpOnly`;
     window.location.href = '/index.html';
 
     console.log('Response:', data);

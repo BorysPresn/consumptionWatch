@@ -35,7 +35,7 @@ body {
     margin-top: -5px;
 }
 .nav-item{
-    padding: 0 1rem 0 1rem;
+    padding: 0 .5rem 0 .5rem;
     transition: all .2s;
 }
 .nav-item .nav-link {
@@ -87,8 +87,8 @@ body {
 
 @media (min-width: 768px) { /* Для medium devices */
     .custom-gap-adjustment {
-        flex: 0 0 calc(25% - 4px); /* Коррекция для 4 элементов в ряд */
-        max-width: calc(25% - 4px); /* Коррекция для 4 элементов в ряд */
+        flex: 0 0 calc(100% / 5 - 4px); /* Коррекция для 4 элементов в ряд */
+        max-width: calc(100% /5 - 4px); /* Коррекция для 4 элементов в ряд */
     }
 }
 .history-select {

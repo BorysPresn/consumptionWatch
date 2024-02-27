@@ -1,57 +1,66 @@
-const { getAllMileageRecords } = require("./database");
+const { getAllMileageRecords, getInitialMileage } = require("./database");
 
 function processData(data){
-    console.log("recived data ", data);
-    const { dailyDistance, fuelVolume, fuelCost} = data;
+    //console.log("recived data ", data);
+    const { distance, fuelVolume, fuelPrice} = data;
     const now = new Date();
-    const fuelConsumption = fuelVolume / dailyDistance * 100;
-    const moneySpend = fuelVolume * fuelCost;
+    const fuelConsumption = fuelVolume / distance * 100;
+    const moneySpent = fuelVolume * fuelPrice;
     let result = {
         date : now.toLocaleDateString("ru-RU"),
         time : now.toLocaleTimeString({ hour12 : false }),
         userId : data.userId,
         ...data,
-        fuelConsumption : fuelConsumption,
-        moneySpend : moneySpend
+        fuelConsumption : cutToTwoDecimals(fuelConsumption),
+        moneySpent : cutToTwoDecimals(moneySpent)
     };
-    console.log(result);
+    //console.log(result);
     return result;
 }
 async function updateStatistic(initialMileage, userId) {
     const allData = await getAllMileageRecords(userId);
-    if(allData.length == 0){ 
+    // const initialMileage = await getInitialMileage(userId);
+    if(allData.data.length == 0){ 
         return { 
             success : false,
             message : "There's no data for statistics yet"
         }
     }
-    return getStatistic(allData);
+    const dataToReturn = getStatistic(allData.data, initialMileage);
+    console.log("returning: ", dataToReturn)
+    return dataToReturn;
 }
 
-function getStatistic(data) {
-    let averDailyDistance = 0;
+function getStatistic(data, initial) {
+    let averDistance = 0;
     let totalFuelConsumed = 0;
     let averConsumption = 0;
-    let totalMoneySpended = 0;
+    let totalmoneySpent = 0;
     let counter = 0;
+    
     data.forEach(record => {
-        averDailyDistance += record.dailyDistance;
-        totalFuelConsumed += record.fuelVolume;
-        averConsumption += record.fuelConsumption;
-        totalMoneySpended += record.moneySpend;
+        averDistance += parseFloat(record.distance);
+        totalFuelConsumed += parseFloat( record.fuelVolume);
+        averConsumption += parseFloat(record.fuelConsumption);
+        totalmoneySpent += parseFloat(record.moneySpent);
         counter++;
     })
+
     return {
         success : true,
         message : "Statistic was updated successfully",
         data : {
-            totalTraveled : allData[allData.length-1].totalMileage - initialMileage,
-            averDailyDistance : averDailyDistance / counter,
-            totalFuelConsumed,
-            averConsumption: averConsumption / counter,
-            totalMoneySpended : totalMoneySpended
+            totalTraveled : cutToTwoDecimals(parseFloat(data[data.length-1].totalMileage - initial)),
+            averDistance : cutToTwoDecimals(parseFloat(averDistance / counter)),
+            totalFuelConsumed : cutToTwoDecimals(totalFuelConsumed),
+            averConsumption: cutToTwoDecimals(parseFloat(averConsumption / counter)),
+            totalmoneySpent : cutToTwoDecimals(totalmoneySpent)
         }
     }
+};
+
+function cutToTwoDecimals(number) {
+    return Math.floor(number * 100) / 100;
 }
 
 module.exports = { processData, updateStatistic, getStatistic };

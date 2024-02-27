@@ -7,7 +7,7 @@ document.getElementById('login-form').addEventListener('submit', async function 
         email : document.getElementById('login-email').value,
         password : document.getElementById('login-password').value,
     };
-
+    console.log(formData)
     // sending data to server
     const response = await fetch('/login', {
         method: 'POST',
@@ -16,8 +16,10 @@ document.getElementById('login-form').addEventListener('submit', async function 
         },
         body: JSON.stringify(formData),
     });
-    const data = await response.json();
-    document.cookie = `token=${data.data.token};path=/;max-age=1800;secure`;
-    window.location.href = '/index.html';
-    console.log('Response:', data);
+    const {userId, token, message} = await response.json();
+    if(userId != undefined && token != undefined) {
+        document.cookie = `token=${token};path=/;max-age=1800;secure`;
+        document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
+        window.location.href = '/index.html';
+    }
 });

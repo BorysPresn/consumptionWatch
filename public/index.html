@@ -27,7 +27,7 @@
                 </div>
                 <div class="col col-2 d-none d-md-flex ms-auto justify-content-between">
                     <div class="icon"></div>
-                    <button type="button" class="btn btn-success" id="logout-btn">Log out</button>
+                    <button type="button" class="btn btn-success logout" id="logout-btn">Log out</button>
                 </div>
                 <div class="offcanvas offcanvas-start bg-success text-white" 
                     tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
@@ -54,7 +54,7 @@
                                     <a class="nav-link" href="#">About</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#">logout</a>
+                                    <a class="nav-link logout" href="#">logout</a>
                                 </li>
                             </ul> 
                         </nav>
@@ -65,7 +65,7 @@
         <div class="container-xl ">
             <div class="row wrapper">
                 <!-- Сайдбар -->
-                <div class="col-3 col-lg-2  d-md-block d-none sidebar-wrap px-2 bg-success text-white">
+                <div class="col-2 col-lg-2  d-md-block d-none sidebar-wrap px-2 bg-success text-white">
                     <nav class="mt-3 pt-1 sidebar">
                         <ul class="navbar-nav justify-content-end flex-grow-1">
                             <li class="nav-item active">
@@ -88,28 +88,32 @@
                 </div>
     
                 <!-- Основной контент -->
-                <main class="col-md-9 ms-sm-auto col-lg-10 text-center">
+                <main class="col-md-10 ms-sm-auto col-lg-10 text-center">
                     <!-- <div class="row margin-top-20px">
                     </div> -->
                     <div class="row pt-3">
                         <div class="col">
-                            <h6 class=" p-2 last-record-date"> Your last record: 25.01.2024</h6>    
+                            <h6 class=" p-2 last-record-date"> Your last record: <span id="date-value">--</span> at <span id="time-value">--</span> </h6>    
                             <div class="last-record-items">
-                                <div class="col-12 col-sm-6 col-md-3 border py-2 rounded record-item total-mileage custom-gap-adjustment">
+                                <div class="col-12 col-sm-5 col-md-1 border py-2 rounded record-item total-mileage custom-gap-adjustment">
                                     <div class="title mb-2 fw-bold">Total milaege</div>
-                                    <div class="text">123654 km</div>
+                                    <div class="text" id="total-mileage-value">--</div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-md-3 border py-2 rounded record-item distance custom-gap-adjustment">
+                                <div class="col-12 col-sm-5 col-md-1 border py-2 rounded record-item distance custom-gap-adjustment">
                                     <div class="title mb-2 fw-bold">Distance</div>
-                                    <div class="text">328 km</div>
+                                    <div class="text" id="distance-value">--</div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-md-3 border py-2 rounded record-item fueled custom-gap-adjustment">
+                                <div class="col-12 col-sm-5 col-md-1 border py-2 rounded record-item fueled custom-gap-adjustment">
                                     <div class="title mb-2 fw-bold">Fueled</div>
-                                    <div class="text">36.45 L</div>
+                                    <div class="text" id="fuel-quantity-value">--</div>
                                 </div>
-                                <div class="col-12 col-sm-6 col-md-3 border py-2 rounded record-item consumption custom-gap-adjustment">
+                                <div class="col-12 col-sm-5 col-md-1 border py-2 rounded record-item consumption custom-gap-adjustment">
                                     <div class="title mb-2 fw-bold">Consumption</div>
-                                    <div class="text">5.5 L/100km</div>
+                                    <div class="text" id="consumption-value">--</div>
+                                </div>
+                                <div class="col-12 col-sm-5 col-md-1 border py-2 rounded record-item consumption custom-gap-adjustment">
+                                    <div class="title mb-2 fw-bold">Money Spent</div>
+                                    <div class="text" id="money-spent-value">--</div>
                                 </div>
                             </div>
                         </div>
@@ -119,25 +123,25 @@
                         <div class="row justify-content-center">
                             <div class="col">
                                 <h4 class="mb-5 mt-3">Add new record</h4>
-                                <div class="row justify-content-center">
+                                <form class="row justify-content-center" id="add-record-form">
                                     <div class="col-12 col-md-6 form-floating mb-3 px-2">
-                                        <input type="text" class="form-control" id="fuelQuantity" placeholder="00.0">
-                                        <label for="fuelQuantity">Input fuel quantity, L</label>
+                                        <input type="text" class="form-control" id="fuel-quantity" placeholder="00.0">
+                                        <label for="fuel-quantity">Input fuel quantity, L</label>
                                     </div>
                                     <div class="col-12 col-md-6 form-floating mb-3 px-2">
                                         <input type="text" class="form-control" id="distance" placeholder="00.0km">
                                         <label for="distance">Input distance, km</label>
                                     </div>
                                     <div class="col-12 col-md-6 form-floating mb-3 px-2">
-                                        <input type="text" class="form-control" id="totalMileage" placeholder="00.0">
-                                        <label for="totalMileage">Input total mileage, km</label>
+                                        <input type="text" class="form-control" id="total-mileage" placeholder="00.0">
+                                        <label for="total-mileage">Input total mileage, km</label>
                                     </div>
                                     <div class="col-12 col-md-6 form-floating mb-3 px-2">
-                                        <input type="text" class="form-control" id="fuelPrice" placeholder="00.0$">
-                                        <label for="fuelPrice">Input price, $/L</label>
+                                        <input type="text" class="form-control" id="fuel-price" placeholder="00.0$">
+                                        <label for="fuel-price">Input price, $/L</label>
                                     </div>
-                                    <button type="submit" class="btn btn-success w-25" id="login-btn">Add</button>
-                                </div>
+                                    <button type="submit" class="btn btn-success w-25" id="login-btn">Add record</button>
+                                </form>
                             </div>
                         </div>
                     </div>

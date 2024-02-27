@@ -10,33 +10,34 @@ const {
   insertMileageRecord, 
   getAllMileageRecords, 
   getLastMileageRecord, 
-  deleteAllMileageRecords, 
   getInitialMileage, 
   insertNewUser,
   checkUser
 } = require('./database');
 const { processData, updateStatistic, getStatistic } = require('./calculator');
-    
-// Эндпоинт для создания записи о пробеге
-app.post('/addMileage', async (req, res) => {
+
+// Endpoint for adding new record
+
+app.post('/addRecord', async (req, res) => {
   try {
     const record = req.body;
     const userId = req.body.userId;
-    const initialData = await getInitialMileage(userId);
+    //const response = await getInitialMileage(userId);
     const processedData = processData(record);
-        
     await insertMileageRecord(processedData);
-
-    const updatedStats = await updateStatistic(initialData.initialMileage, userId);
-
-    res.status(200).json(updatedStats);
+    const lastRecord = await getLastMileageRecord(userId);
+    // const { userId, _id, ...respToClient } = lastRecord;
+    delete lastRecord.userId;
+    delete lastRecord._id;
+    res.status(200).json(lastRecord);
   } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Internal Server Error' });
   }
 });
   
-  // Эндпоинт для получения всех записей о пробеге
+  // Endpoint for getting all records
+
 app.get('/history', async (req, res) => {
   const userId = req.query.userId;
   try {
@@ -50,29 +51,36 @@ app.get('/history', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
-  
+
+//Endpoint for Register
 app.post('/register', async (req, res) => {
   try {
     const record = req.body;
     console.log(record)
-    const result = await insertNewUser(record);
-    if (!result.success) {
-      res.status(400).json({ result })
+    const {success, message, userId, token} = await insertNewUser(record);
+    if (success) {
+      res.status(200).json({ userId, token })
     }
-    res.status(200).json({ result });
+    res.status(400).json({ success, message });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 
+//Endpoint for logIn
 app.post('/login', async (req, res) => {
   try {
-    const result = await checkUser(req.body);
-    if(result.success){
-      res.status(200).json({ result });
+    const {success, message, userId, token} = await checkUser(req.body);
+    
+    if(success){
+      res.status(200).json({ 
+        message,
+        userId,
+        token
+       });
     } else {
-      res.status(400).json({ result })
+      res.status(400).json({ success, message });
     }
   } catch (error) {
     console.error('Error in /login:', error);
@@ -80,12 +88,32 @@ app.post('/login', async (req, res) => {
   }
 });
 
+//Enpoint for getting last record 
+app.get('/lastRecord', async (req, res) => {
+  try {
+    const userId = req.query.userId;
+    const response = await getLastMileageRecord(userId);
+    if(response){
+      res.status(200).json(response);
+    } else {
+      res.status(400).json("no data");
+    }
+  } catch (error) {
+    console.error(error)
+    console.log(message);
+    res.status(500).json({ error : 'Internal server error' });
+  }
+})
+
 app.get('/users', async (req, res)=> {
   try {
     const userId = req.query.userId;
-    console.log(userId);
-    const record = await getInitialMileage(userId);
-    res.status(200).json(record);
+    const {success, message, data} = await getInitialMileage(userId);
+    if(success){
+      res.status(200).json({message, data});
+    } else {
+      res.status(400).json({success, message})
+    }
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
