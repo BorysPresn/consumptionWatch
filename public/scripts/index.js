@@ -1,4 +1,13 @@
-//global Variables
+// Sidebar 
+let sidebarArray = document.querySelectorAll('.sidebar');
+sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
+    const target = e.target.closest('.nav-item');
+    if(target){
+        document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
+        target.classList.add('active');
+    }
+}));
+
 
 
 //checking authorization
@@ -40,76 +49,36 @@ logoutButtons.forEach(element => {
 
 document.getElementById('add-record-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    let distInp = document.getElementById('distance');
-    let tMilInp = document.getElementById('total-mileage');
-    let fQuantInp = document.getElementById('fuel-quantity');
-    let fPriceInp = document.getElementById('fuel-price');
-    let errorBlock = document.getElementById('error-message');
-
-    distInp.classList.remove('error');
-    tMilInp.classList.remove('error');
-    fQuantInp.classList.remove('error');
-    fPriceInp.classList.remove('error');
-    errorBlock.innerHTML = '';
-
+    const inputIds = ['fuelVolume', 'distance', 'totalMileage', 'fuelPrice'];
     const userId = getCookie('userId');
-    const fQuantity = transformInputValue('fuel-quantity');
-    const distance = transformInputValue('distance');
-    const totalMileage = transformInputValue('total-mileage');
-    const fPrice = transformInputValue('fuel-price');
-    
-    if(Number.isNaN(distance) && Number.isNaN(totalMileage)) { 
-        console.log('At least one of these inputs must been filled');
-        errorBlock.innerHTML = 'At least one of these inputs must been filled';
-        distInp.classList.add('error');
-        tMilInp.classList.add('error');
-        return;
-    } else if(Number.isNaN(fQuantity)) {
-        errorBlock.innerHTML = 'Only number';
-        fQuantInp.classList.add('error');
-        return;
-    } else if(Number.isNaN(fPrice)) {
-        errorBlock.innerHTML = 'Only number';
-        fPriceInp.classList.add('error');
-        return;
-    }
 
-    if(userId){
-        const formData = {
-            fuelVolume : fQuantity,
-            distance : distance,
-            totalMileage : totalMileage,
-            fuelPrice : fPrice,
-            userId: userId
-        }
-        console.log(formData);
-        document.getElementById('error-message').innerHTML = '';
-        const response = await fetch('/addRecord', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(formData),
-        });
-        const data = await response.json();
-        console.log(data);
-        insertDataToHtml(data);
-    
-    } else {
+    if(!userId){
         console.log('no userId');
         window.location.href = '/login.html';
+        return;
     }
+
+    const formData = getAndValidateInputs(inputIds);
+
+    if(!formData){
+        console.log('validation failed');
+        return;
+    }
+    console.log(formData);
+
+    const response = await fetch('/addRecord', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    });
+    const data = await response.json();
+    console.log(data);
+    insertDataToHtml(data);
+
 })
 
-function insertDataToHtml(data) {
-    document.getElementById('date-value').innerHTML = data.date;
-    document.getElementById('time-value').innerHTML = data.time;
-    document.getElementById('total-mileage-value').innerHTML = data.totalMileage + ' km';
-    document.getElementById('distance-value').innerHTML = data.distance + ' km';
-    document.getElementById('consumption-value').innerHTML = data.fuelConsumption + ' L/100km';
-    document.getElementById('fuel-quantity-value').innerHTML = data.fuelVolume + ' L';
-    document.getElementById('money-spent-value').innerHTML = data.moneySpent + ' Zł';
-}
 
 function getCookie(name) {
     const cookieArray = document.cookie.split('; ');
@@ -120,7 +89,29 @@ function getCookie(name) {
     return null;
 }
 
+function getAndValidateInputs(ids){
+    let isValid = true;
+    let errorMessage = document.getElementById('error-message');
+    let formData = {};
+    ids.forEach(id => {
+        let input = document.getElementById(id)
+        let value = parseFloat(input.value.replace(',', '.'));
+        if(Number.isNaN(value) || value <= 0){
+            input.classList.add('error');
+            errorMessage.innerHTML = "Only positive numbers are allowed";
+            isValid = false;
+        } else {
+            input.classList.remove('error');
+            errorMessage.innerHTML = '';
+            formData[id] = value;
+        }
+    })
+    return isValid ? formData : null;
+}
 
-function transformInputValue(inputId) {
-    return parseFloat(document.getElementById(inputId).value.replace(',', '.'));
+function insertDataToHtml(data) {
+    Object.keys(data).forEach(key => {
+        let elemId = key+'Value';
+        document.getElementById(elemId).innerHTML = data[key];
+    })
 }

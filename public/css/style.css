@@ -90,8 +90,8 @@ body {
 
 @media (min-width: 768px) { /* Для medium devices */
     .custom-gap-adjustment {
-        flex: 0 0 calc(100% / 5 - 4px); /* Коррекция для 4 элементов в ряд */
-        max-width: calc(100% /5 - 4px); /* Коррекция для 4 элементов в ряд */
+        flex: 0 0 calc(100% / 3 - 4px); /* Коррекция для 3 элементов в ряд */
+        max-width: calc(100% / 3 - 4px); /* Коррекция для 3 элементов в ряд */
     }
 }
 .history-select {
