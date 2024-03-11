@@ -16,8 +16,9 @@ document.getElementById('login-form').addEventListener('submit', async function 
         },
         body: JSON.stringify(formData),
     });
-    const {userId, token, message} = await response.json();
+    const {userId, token, message, initialMileage} = await response.json();
     if(userId != undefined && token != undefined) {
+        sessionStorage.setItem('initialMileage', initialMileage);
         document.cookie = `token=${token};path=/;max-age=1800;secure`;
         document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
         window.location.href = '/index.html';

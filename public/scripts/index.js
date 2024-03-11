@@ -1,4 +1,8 @@
+let lastMileage = null;
+
+
 // Sidebar 
+
 let sidebarArray = document.querySelectorAll('.sidebar');
 sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
     const target = e.target.closest('.nav-item');
@@ -28,6 +32,8 @@ document.addEventListener('DOMContentLoaded', async function(){
         const data = await response.json();
         console.log(data);
         insertDataToHtml(data);
+        lastMileage = data.totalMileage
+        console.log(lastMileage)
     }
 })
 
@@ -58,25 +64,25 @@ document.getElementById('add-record-form').addEventListener('submit', async (e) 
         return;
     }
 
-    const formData = getAndValidateInputs(inputIds);
+    const formData = getAndValidateInputs(inputIds, userId, lastMileage);
 
     if(!formData){
         console.log('validation failed');
         return;
-    }
+    } 
     console.log(formData);
 
-    const response = await fetch('/addRecord', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-    });
-    const data = await response.json();
+    // const response = await fetch('/addRecord', { 
+    //     method: 'POST',
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //     },
+    //     body: JSON.stringify(formData),
+    // });
+    // const data = await response.json();
     console.log(data);
     insertDataToHtml(data);
-
+    lastMileage = data.totalMileage;
 })
 
 
@@ -89,23 +95,54 @@ function getCookie(name) {
     return null;
 }
 
-function getAndValidateInputs(ids){
+function getAndValidateInputs(ids, id, lastMileage){
+    let lastMileageElem = document.querySelector('.record-item.total-mileage');
     let isValid = true;
     let errorMessage = document.getElementById('error-message');
     let formData = {};
-    ids.forEach(id => {
+    for (let id of ids){
         let input = document.getElementById(id)
-        let value = parseFloat(input.value.replace(',', '.'));
-        if(Number.isNaN(value) || value <= 0){
+        let value = input.value.replace(',', '.');
+        formData[id] = value;
+        if((id == 'totalMileage'||id == 'distance') && !formData[id]) {
+            formData[id] = null;
+        }
+    }
+    if(!formData.totalMileage && !formData.distance){
+        errorMessage.textContent = 'At least one of these inputs must been filled';
+        return;
+    }
+    
+    console.log('before', formData)
+    for(let id of ids){
+        let input = document.getElementById(id)
+        if(formData[id] == null){
+            formData[id] = calculateData(id, formData);
+        }
+        let value = parseFloat(formData[id]);
+        if(id == 'totalMileage' && value != 0 && value <= lastMileage){
+            errorMessage.textContent = "'Mileage can`t be less or equal to the last mileage'";
             input.classList.add('error');
-            errorMessage.innerHTML = "Only positive numbers are allowed";
+            
+            lastMileageElem.classList.add('bg-danger');
             isValid = false;
+            break;
+        }
+        else if(Number.isNaN(value) || value <= 0){
+            // if(id=='totalMileage' || id == 'distance') continue;
+            input.classList.add('error');
+            errorMessage.textContent = "Only positive numbers are allowed";
+            isValid = false;
+            break;
         } else {
             input.classList.remove('error');
-            errorMessage.innerHTML = '';
+            lastMileageElem.classList.remove('bg-danger');
+            errorMessage.textContent = '';
             formData[id] = value;
         }
-    })
+    }
+    formData = {...formData, userId : id}
+    console.log(formData)
     return isValid ? formData : null;
 }
 
@@ -114,4 +151,15 @@ function insertDataToHtml(data) {
         let elemId = key+'Value';
         document.getElementById(elemId).innerHTML = data[key];
     })
+}
+
+function calculateData(key, data) {
+    let prevMileage = parseFloat(document.getElementById(key + 'Value').innerText);
+    prevMileage = Number.isNaN(prevMileage) ? sessionStorage.getItem('initialMileage') : prevMileage;
+    if(key == 'totalMileage') {
+        return prevMileage + data.distance;
+    }
+    if(key == 'distance') {
+        return data.totalMileage - prevMileage;
+    }
 }

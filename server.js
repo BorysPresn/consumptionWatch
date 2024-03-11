@@ -22,8 +22,13 @@ app.post('/addRecord', async (req, res) => {
   try {
     const record = req.body;
     const userId = req.body.userId;
-    //const response = await getInitialMileage(userId);
-    const processedData = processData(record);
+    
+    const processedData = await processData(record);
+    if(processedData == null){
+      res.status(500).json({ error : 'Error while data validating' });
+      return;
+    }
+    console.log('processed data = ' + JSON.stringify(processedData))
     await insertMileageRecord(processedData);
     const lastRecord = await getLastMileageRecord(userId);
     // const { userId, _id, ...respToClient } = lastRecord;
@@ -56,12 +61,12 @@ app.get('/history', async (req, res) => {
 app.post('/register', async (req, res) => {
   try {
     const record = req.body;
-    console.log(record)
-    const {success, message, userId, token} = await insertNewUser(record);
+    console.log('server', record)
+    const {success, message, userId, token, initialMileage} = await insertNewUser(record);
     if (success) {
-      res.status(200).json({ userId, token })
+      return res.status(200).json({ userId, token, initialMileage })
     }
-    res.status(400).json({ success, message });
+    return res.status(400).json({ success, message });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -71,13 +76,14 @@ app.post('/register', async (req, res) => {
 //Endpoint for logIn
 app.post('/login', async (req, res) => {
   try {
-    const {success, message, userId, token} = await checkUser(req.body);
+    const {success, message, userId, token, initialMileage} = await checkUser(req.body);
     
     if(success){
       res.status(200).json({ 
         message,
         userId,
-        token
+        token,
+        initialMileage
        });
     } else {
       res.status(400).json({ success, message });
@@ -110,11 +116,11 @@ app.get('/lastRecord', async (req, res) => {
 app.get('/users', async (req, res)=> {
   try {
     const userId = req.query.userId;
-    const {success, message, data} = await getInitialMileage(userId);
-    if(success){
-      res.status(200).json({message, data});
+    const initialMileage = await getInitialMileage(userId);
+    if(initialMileage){
+      res.status(200).json({initialMileage : initialMileage});
     } else {
-      res.status(400).json({success, message})
+      res.status(400).json('not found');
     }
   } catch (error) {
     console.error(error);

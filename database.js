@@ -63,20 +63,22 @@ async function getAllMileageRecords(userId) {
     return {success : true, message : "succes", data : mileageCollection}
 }
 
-async function getLastMileageRecord() {
+async function getLastMileageRecord(id) {
     const db = await connectToDatabase();
     const mileageCollection = db.collection('mileage');
     // Замените на ваш фактический запрос для получения последней записи
-    return mileageCollection.findOne({}, { sort: { _id: -1 } });
+    return mileageCollection.findOne({userId : id}, { sort: { _id: -1 } });
 }
 
 async function insertNewUser(record) {
+  const {email, password, initialMileage} = record;
+  console.log(email, password, initialMileage)
   const db = await connectToDatabase();
   const usersCollection = db.collection('users');
   try {
     // console.log('Hashing password:', record.password, 'with salt rounds:', saltRounds);
-    const hashedPassword = await bcrypt.hash(record.password, saltRounds);
-    const alreadyExists = await usersCollection.findOne({email: record.email});
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const alreadyExists = await usersCollection.findOne({email: email});
     if(alreadyExists){
       return ({success : false, message : "This e-mail already exists"});
     }
@@ -84,12 +86,15 @@ async function insertNewUser(record) {
       ...record,
       password : hashedPassword
     });
+    const user = await usersCollection.findOne({email: email});
+    console.log('user after inserting', user)
     const token = jwt.sign({ userId: user._id, email: user.email }, secretKey, { expiresIn: '1h' });
     return {
       success : true, 
       message : "User registered successfully", 
       userId : result.insertedId, 
-      token : token 
+      token : token,
+      initialMileage : user.initialMileage 
     };
   } catch (error) {
       console.error(error);
@@ -124,7 +129,8 @@ async function checkUser(userToFind) {
       success : true, 
       message : "Login successful", 
       userId : user._id, 
-      token : token 
+      token : token ,
+      initialMileage: user.initialMileage 
     };
   } catch (error) {
     console.error('Error in checkUser:', error);
@@ -138,16 +144,11 @@ async function getInitialMileage(id) {
     console.log('this is an UserId : ', typeof id)
     const db = await connectToDatabase();
     const usersCollection = db.collection('users');
-    const user = await usersCollection.findOne({ _id : new ObjectId('65d4ea96c51bf28135029394') });
+    const user = await usersCollection.findOne({ _id : new ObjectId(id) });
     if(!user){
-      return { 
-        success : false, 
-        message : 'User not found' 
-      };
+      return  null;
     }
-    return { 
-      data : user.initialMileage 
-    };
+    return user.initialMileage;
   } catch (error) {
     console.error('Error in getInitialMileage:', error);
     throw new Error('Error getting initial mileage');
