@@ -23,7 +23,7 @@ app.post('/addRecord', async (req, res) => {
     const record = req.body;
     const userId = req.body.userId;
     
-    const processedData = await processData(record);
+    const processedData = await processData(record, userId);
     if(processedData == null){
       res.status(500).json({ error : 'Error while data validating' });
       return;
@@ -41,21 +41,7 @@ app.post('/addRecord', async (req, res) => {
   }
 });
   
-  // Endpoint for getting all records
 
-app.get('/history', async (req, res) => {
-  const userId = req.query.userId;
-  try {
-    const records = await getAllMileageRecords(userId);
-    if (!records.success){
-      res.status(400).json({ records });
-    }
-    res.status(200).json(records);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
 
 //Endpoint for Register
 app.post('/register', async (req, res) => {
@@ -102,9 +88,10 @@ app.get('/lastRecord', async (req, res) => {
     if(response){
       delete response.userId;
       delete response._id;
-      res.status(200).json(response);
+      return res.status(200).json(response);
+      
     } else {
-      res.status(400).json("no data");
+      return res.status(400).json("no data");
     }
   } catch (error) {
     console.error(error)
@@ -122,6 +109,22 @@ app.get('/users', async (req, res)=> {
     } else {
       res.status(400).json('not found');
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// Endpoint for getting all records
+
+app.get('/history', async (req, res) => {
+  const userId = req.query.userId;
+  try {
+    const records = await getAllMileageRecords(userId);
+    if (!records.success){
+      res.status(400).json({ records });
+    }
+    res.status(200).json(records);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

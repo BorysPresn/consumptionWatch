@@ -60,6 +60,7 @@ async function getAllMileageRecords(userId) {
     if (!mileageCollection) {
       return { success : false, message : "User not found" };
     }
+    console.log(mileageCollection)
     return {success : true, message : "succes", data : mileageCollection}
 }
 
@@ -141,7 +142,7 @@ async function checkUser(userToFind) {
 
 async function getInitialMileage(id) {
   try{
-    console.log('this is an UserId : ', typeof id)
+    // console.log('this is an UserId : ', typeof id)
     const db = await connectToDatabase();
     const usersCollection = db.collection('users');
     const user = await usersCollection.findOne({ _id : new ObjectId(id) });

@@ -1,11 +1,11 @@
 const { getAllMileageRecords, getInitialMileage, getLastMileageRecord } = require("./database");
 
-async function processData(data){
+async function processData(data, id){
     try {
-        const lastRecord = await getLastMileageRecord(data.userId);
-        // console.log('last record : ' + JSON.stringify(lastRecord))
-        const recordToUSe = lastRecord.totalMileage ? lastRecord.totalMileage : await getInitialMileage(data.userId);
-        // console.log('recordToUse : ' + JSON.stringify(recordToUSe));
+        const lastRecord = await getLastMileageRecord(id);
+        console.log('last record : ', lastRecord, data.userId)
+        const recordToUSe = lastRecord ? lastRecord.totalMileage : await getInitialMileage(data.userId);
+        console.log('recordToUse : ', recordToUSe);
 
         const valid = checkValidity(data, recordToUSe);
         console.log("valid = " + valid)
@@ -53,10 +53,10 @@ function getStatistic(data, initial) {
     let counter = 0;
     
     data.forEach(record => {
-        averDistance += parseFloat(record.distance);
-        totalFuelConsumed += parseFloat( record.fuelVolume);
-        averConsumption += parseFloat(record.fuelConsumption);
-        totalmoneySpent += parseFloat(record.moneySpent);
+        averDistance += record.distance;
+        totalFuelConsumed += record.fuelVolume;
+        averConsumption += record.fuelConsumption;
+        totalmoneySpent += record.moneySpent;
         counter++;
     })
 
@@ -70,7 +70,7 @@ function getStatistic(data, initial) {
 };
 
 function cutToTwoDecimals(number) {
-    return Math.floor(number * 100) / 100;
+    return parseFloat(number.toFixed(2));
 }
 
 function checkValidity(data, record) {
