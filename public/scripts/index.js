@@ -1,8 +1,9 @@
-import { getCookie, getAndValidateInputs, insertDataToHtml }  from "./functions.js"
+import { getCookie, getAndValidateInputs, insertDataToHtml, showBlock }  from "./functions.js"
 let lastMileage = null;
 let addRecordBlock = document.getElementById('addRecordBlock');
 let historyBlock = document.getElementById('historyBlock');
 const navigateItems = [addRecordBlock, historyBlock];
+
 // Sidebar 
 
 let sidebarArray = document.querySelectorAll('.sidebar');
@@ -23,6 +24,8 @@ document.addEventListener('DOMContentLoaded', async function(){
     if(!cookie) {
         window.location.href = '/login.html';
     } else {
+        showBlock(addRecordBlock, navigateItems);
+
         const userId = getCookie('userId');
         const response = await fetch(`/lastRecord?userId=${userId}`, {
             method : 'GET',
@@ -31,7 +34,7 @@ document.addEventListener('DOMContentLoaded', async function(){
             },
         });
         if(!response.ok){
-            console.log('no data to insert yet \n getting initial mileage from USERS COLL');
+            console.log('no data to insert \n getting initial mileage from USERS COLL');
 
             const response = await fetch(`/users?userId=${userId}`, {
                 method: 'GET',
@@ -109,7 +112,9 @@ document.getElementById('add-record-form').addEventListener('submit', async (e) 
 
 // History
 
-document.getElementById('history').addEventListener('click', async function () {
+document.getElementById('history').addEventListener('click', async function (e) {
+    
+    console.log("click", e.target)
     addRecordBlock.style.display = 'none';
     historyBlock.style.display = 'block';
     const userId = getCookie('userId');

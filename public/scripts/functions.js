@@ -76,3 +76,10 @@ function calculateData(key, data) {
     }
 }
 
+
+export function showBlock(blockName, blockArray) {
+    blockArray.forEach(elem => {
+        elem.style.display = 'none';
+    });
+    blockName.style.display = 'block';
+}

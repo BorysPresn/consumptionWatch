@@ -36,26 +36,15 @@
                 </div>
                 <div class="offcanvas-body px-0 text-center text-white">
                     <nav class="mt-3 pt-1 sidebar">
-                        <ul class="navbar-nav justify-content-end flex-grow-1">
-                            <li class="nav-item active">
-                                <a class="nav-link" aria-current="page" href="index.html">Home</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#">History</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#">Statistic</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#">Help</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#">About</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link logout" href="#">logout</a>
-                            </li>
-                        </ul> 
+                        <nav class="mt-3 pt-1 sidebar">
+                            <ul class="navbar-nav justify-content-end flex-grow-1">
+                                <li id="nav_add-record" class="nav-item p-2 active">Add record</li>
+                                <li id="nav_history" class="nav-item p-2">History</li>
+                                <li id="nav_statistic" class="nav-item p-2">Statistic</li>
+                                <li id="nav_help" class="nav-item p-2">Help</li>
+                                <li id="nav_about" class="nav-item p-2">About</li>
+                            </ul> 
+                        </nav>
                     </nav>
                 </div>  
             </div>
@@ -132,7 +121,9 @@
                                         <label for="fuelPrice">Input price, $/L</label>
                                     </div>
                                     <div class="text-danger mb-3 fw-bold" id="error-message"></div>
-                                    <button type="submit" class="btn btn-success w-25" id="login-btn">Add record</button>
+                                    <div class="row justify-content-center">
+                                        <button type="submit" class="btn btn-success col-8 col-sm-3" id="login-btn">Add record</button>
+                                    </div>
                                 </form>
                             </div>
                         </div>

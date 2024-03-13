@@ -17,10 +17,15 @@ document.getElementById('login-form').addEventListener('submit', async function 
         body: JSON.stringify(formData),
     });
     const {userId, token, message, initialMileage} = await response.json();
-    if(userId != undefined && token != undefined) {
+    if(response.ok) {
         sessionStorage.setItem('initialMileage', initialMileage);
         document.cookie = `token=${token};path=/;max-age=1800;secure`;
         document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
         window.location.href = '/index.html';
+        return;
+    } else {
+        console.log(response, message)
+        document.querySelector('.error-block').textContent = message;
+        return;
     }
 });

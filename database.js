@@ -60,7 +60,6 @@ async function getAllMileageRecords(userId) {
     if (!mileageCollection) {
       return { success : false, message : "User not found" };
     }
-    console.log(mileageCollection)
     return {success : true, message : "succes", data : mileageCollection}
 }
 
