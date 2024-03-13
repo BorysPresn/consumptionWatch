@@ -1,17 +1,25 @@
 import { getCookie, getAndValidateInputs, insertDataToHtml, showBlock }  from "./functions.js"
 let lastMileage = null;
-let addRecordBlock = document.getElementById('addRecordBlock');
-let historyBlock = document.getElementById('historyBlock');
-const navigateItems = [addRecordBlock, historyBlock];
+let blocks = {
+    addRecordBlock : document.getElementById('addRecordBlock'),
+    historyBlock : document.getElementById('historyBlock'),
+    statisticBlock : document.getElementById('statisticBlock'),
+    aboutBlock : document.getElementById('aboutBlock'),
+    helpBlock : document.getElementById('helpBlock')
+};
 
+const navigateItems = Object.values(blocks);
+console.log(navigateItems)
 // Sidebar 
 
 let sidebarArray = document.querySelectorAll('.sidebar');
 sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
     const target = e.target.closest('.nav-item');
     if(target){
+        //console.log(target.id)
         document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
         target.classList.add('active');
+        showBlock(target.dataset.target, navigateItems);
     }
     
 }));
@@ -24,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     if(!cookie) {
         window.location.href = '/login.html';
     } else {
-        showBlock(addRecordBlock, navigateItems);
+        showBlock("addRecordBlock", navigateItems);
 
         const userId = getCookie('userId');
         const response = await fetch(`/lastRecord?userId=${userId}`, {
@@ -95,7 +103,6 @@ document.getElementById('add-record-form').addEventListener('submit', async (e) 
         console.log('validation failed');
         return;
     } 
-    console.log(formData);
 
     const response = await fetch('/addRecord', { 
         method: 'POST',
@@ -114,9 +121,6 @@ document.getElementById('add-record-form').addEventListener('submit', async (e) 
 
 document.getElementById('history').addEventListener('click', async function (e) {
     
-    console.log("click", e.target)
-    addRecordBlock.style.display = 'none';
-    historyBlock.style.display = 'block';
     const userId = getCookie('userId');
     const history = await fetch(`/history?userId=${userId}`,{
         method : 'GET',

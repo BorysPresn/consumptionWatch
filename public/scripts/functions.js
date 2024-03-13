@@ -78,8 +78,13 @@ function calculateData(key, data) {
 
 
 export function showBlock(blockName, blockArray) {
+    let blockToShow = null;
     blockArray.forEach(elem => {
+        if(elem.id === blockName) {
+            blockToShow = elem;
+        }
         elem.style.display = 'none';
     });
-    blockName.style.display = 'block';
+    
+    blockToShow.style.display = 'block';
 }
