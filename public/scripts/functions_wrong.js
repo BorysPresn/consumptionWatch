@@ -83,10 +83,8 @@ export function showBlock(blockName, blockArray) {
         if(elem.id === blockName) {
             blockToShow = elem;
         }
-        // console.log('showBlock.display.none', elem)
         elem.style.display = 'none';
     });
-    console.log(blockToShow);
+    
     blockToShow.style.display = 'block';
-    blockToShow = null;
 }

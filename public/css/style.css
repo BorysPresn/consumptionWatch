@@ -104,7 +104,9 @@ body {
     padding-top: 0;
 
 }
-
+#loginBlock, #registerBlock, #mainContentBlock {
+    display: none;
+}
 /* .history-select option {
     padding: 5px;
 } */

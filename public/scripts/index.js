@@ -1,76 +1,152 @@
 import { getCookie, getAndValidateInputs, insertDataToHtml, showBlock }  from "./functions.js"
 let lastMileage = null;
-let blocks = {
+
+let authBlocks = {
+    loginBlock : document.getElementById('loginBlock'),
+    registerBlock : document.getElementById('registerBlock'),
+    mainContentBlock : document.getElementById('mainContentBlock')
+};
+const authItems = Object.values(authBlocks);
+
+let contentBlocks = {
     addRecordBlock : document.getElementById('addRecordBlock'),
     historyBlock : document.getElementById('historyBlock'),
     statisticBlock : document.getElementById('statisticBlock'),
     aboutBlock : document.getElementById('aboutBlock'),
     helpBlock : document.getElementById('helpBlock')
 };
+const navigateItems = Object.values(contentBlocks);
 
-const navigateItems = Object.values(blocks);
-console.log(navigateItems)
-// Sidebar 
-
-let sidebarArray = document.querySelectorAll('.sidebar');
-sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
-    const target = e.target.closest('.nav-item');
-    if(target){
-        //console.log(target.id)
-        document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
-        target.classList.add('active');
-        showBlock(target.dataset.target, navigateItems);
+//Login
+document.getElementById('registerLink').addEventListener('click', function() { 
+    showBlock('registerBlock', authItems);
+    return;
+});
+document.getElementById('login-form').addEventListener('submit', async function (e){
+    e.preventDefault();
+    let loginErrorBlock = document.getElementById('loginErrorBlock');
+    const formData = {
+        email : document.getElementById('login-email').value,
+        password : document.getElementById('login-password').value,
+    };
+    // console.log(formData)
+    // sending data to server
+    const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    });
+    const {userId, token, message, initialMileage} = await response.json();
+    console.log(response)
+    if(response.ok) {
+        sessionStorage.setItem('initialMileage', initialMileage);
+        document.cookie = `token=${token};path=/;max-age=1800;secure`;
+        document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
+        showBlock('mainContentBlock', authItems);
+        showBlock("addRecordBlock", navigateItems);
+        loginErrorBlock.textContent = '';
+        return;
+    } else {
+        console.log(response, message)
+        loginErrorBlock.textContent = message;
+        return;
     }
-    
-}));
+});
+
+//Register
+document.getElementById('loginLink').addEventListener('click', function() { 
+    showBlock('loginBlock', authItems); 
+    return;
+});
+document.getElementById('registration-form').addEventListener('submit', async function(e){
+    e.preventDefault(); 
+    let errorBlock = document.getElementById('registerErrorBlock');
+    const mileageInput = document.getElementById('initial-mileage');
+    const formData = {
+        email : document.getElementById('register-email').value,
+        password : document.getElementById('register-password').value,
+        initialMileage : parseFloat(mileageInput.value)
+    };
+    if(formData.initialMileage < 0 || !formData.initialMileage){
+        mileageInput.classList.add('error');
+        errorBlock.textContent = "Only positive numbers are alowed!";
+    }
+    // sending data to server
+    const response = await fetch('/register', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+    });
+
+    const {userId, token, message, initialMileage} = await response.json();
+    if(userId && token) {
+        sessionStorage.setItem('initialMileage', initialMileage);
+        document.cookie = `token=${token};path=/;max-age=1800;secure`;
+        document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
+        showBlock('mainContentBlock', authItems);
+        showBlock("addRecordBlock", navigateItems);
+        errorBlock.textContent = '';
+        mileageInput.classList.remove('error');
+    } else {
+        errorBlock.textContent = message;
+        return;
+    }
+    // console.log('Response:', {userId, token, message, initialMileage});
+});
 
 //checking authorization
 
 document.addEventListener('DOMContentLoaded', async function(){
     const cookie = getCookie('token');
-    
+
     if(!cookie) {
-        window.location.href = '/login.html';
-    } else {
-        showBlock("addRecordBlock", navigateItems);
-
-        const userId = getCookie('userId');
-        const response = await fetch(`/lastRecord?userId=${userId}`, {
-            method : 'GET',
-            headers: {
-                'Content-Type' : 'application/json',
-            },
-        });
-        if(!response.ok){
-            console.log('no data to insert \n getting initial mileage from USERS COLL');
-
-            const response = await fetch(`/users?userId=${userId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type' : 'application/json',
-                },
-            });
-            if(!response.ok) {
-                console.log(response.status)
-                return;
-            } else {    
-                const data = await response.json();
-                data.totalMileage = data.initialMileage;
-                delete data.initialMileage;
-                
-                insertDataToHtml(data);
-                return;
-            }
-
-        } else {
-            const data = await response.json();
-            // console.log(data);
-            insertDataToHtml(data);
-            lastMileage = data.totalMileage
-            // console.log(lastMileage)
-            return;
-        }
+       showBlock("loginBlock", authItems);
+       return;
     }
+    showBlock("mainContentBlock", authItems);
+    showBlock("addRecordBlock", navigateItems);
+    // console.log(navigateItems)
+    const userId = getCookie('userId');
+    const response = await fetch(`/lastRecord?userId=${userId}`, {
+        method : 'GET',
+        headers: {
+            'Content-Type' : 'application/json',
+        },
+    });
+    if(!response.ok){
+        console.log('no data to insert \n getting initial mileage from USERS COLL');
+        document.getElementById('lastRecordBlock').hidden = true;
+        // const response = await fetch(`/initialMilaege?userId=${userId}`, {
+        //     method: 'GET',
+        //     headers: {
+        //         'Content-Type' : 'application/json',
+        //     },
+        // });
+        // if(!response.ok) {
+        //     console.log(response.status)
+        //     return;
+        // } else {    
+        //     const data = await response.json();
+        //     data.totalMileage = data.initialMileage;
+        //     delete data.initialMileage;
+            
+        //     insertDataToHtml(data);
+        //     return;
+        // }
+
+    } else {
+        document.getElementById('lastRecordBlock').hidden = false;
+        const data = await response.json();
+        console.log('after', data);
+        insertDataToHtml(data);
+        lastMileage = data.totalMileage
+        // console.log(lastMileage)
+    }
+    
 })
 
 //logout button
@@ -80,9 +156,23 @@ logoutButtons.forEach(element => {
     element.addEventListener('click', () => {
         document.cookie = `token=;path=/;max-age=0;secure`;
         document.cookie = `userId=;path=/;max-age=0;secure`;
-        window.location.href = '/login.html';
+        showBlock('loginBlock', authItems);
     })
 });
+
+// Sidebar 
+
+let sidebarArray = document.querySelectorAll('.sidebar');
+sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
+    const target = e.target.closest('.nav-item');
+    if(target){
+        document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
+        target.classList.add('active');
+        showBlock(target.dataset.target, navigateItems);
+    }
+    
+}));
+
 
 // add Record
 
@@ -93,12 +183,13 @@ document.getElementById('add-record-form').addEventListener('submit', async (e) 
 
     if(!userId){
         console.log('no userId');
-        window.location.href = '/login.html';
+        showBlock('loginBlock', authItems);
         return;
     }
 
     const formData = getAndValidateInputs(inputIds, userId, lastMileage);
-
+    formData.fullTank = document.getElementById('fullTank').checked;
+    
     if(!formData){
         console.log('validation failed');
         return;
