@@ -67,7 +67,13 @@ async function getLastMileageRecord(id) {
     const db = await connectToDatabase();
     const mileageCollection = db.collection('mileage');
     // Замените на ваш фактический запрос для получения последней записи
-    return mileageCollection.findOne({userId : id}, { sort: { _id: -1 } });
+    return mileageCollection.findOne({userId : id, fullTank: true}, { sort: { _id: -1 } });
+}
+
+async function getPartialTankRecords(id) {
+  const db = await connectToDatabase();
+  const mileageCollection = db.collection('mileage');
+  return mileageCollection.find({ userId: id, fullTank: false }).toArray();
 }
 
 async function insertNewUser(record) {
@@ -161,7 +167,8 @@ module.exports = {
   connectToDatabase, 
   insertMileageRecord, 
   getAllMileageRecords, 
-  getLastMileageRecord, 
+  getLastMileageRecord,
+  getPartialTankRecords, 
   // deleteAllMileageRecords, 
   getInitialMileage,
   insertNewUser,
