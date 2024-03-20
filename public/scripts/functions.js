@@ -86,7 +86,12 @@ export function showBlock(blockName, blockArray) {
         // console.log('showBlock.display.none', elem)
         elem.style.display = 'none';
     });
-    console.log(blockToShow);
+    // console.log(blockToShow);
     blockToShow.style.display = 'block';
     blockToShow = null;
 }
+
+export function clearRecordBlock(){
+    Array.from(document.getElementById('lastRecordBlock').querySelectorAll('.text')).forEach(elem => elem.textContent = '--');
+}
+

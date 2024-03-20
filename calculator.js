@@ -2,7 +2,7 @@ const { getAllMileageRecords, getInitialMileage, getLastMileageRecord, getPartia
 
 async function processData(data, id){
     try {
-        
+        const calcPartialTankRecords = {};
         const lastRecord = await getLastMileageRecord(id);
         // console.log('last record : ', lastRecord, data.userId)
         const recordToUSe = lastRecord ? lastRecord.totalMileage : await getInitialMileage(data.userId);
@@ -14,30 +14,39 @@ async function processData(data, id){
             console.log('imhere')
             return null;
         }
-        const partialTankRecords = await getPartialTankRecords(id);
-        partialTankRecords.push(data);
-        const calcPartialTankRecords = partialTankRecords.reduce((accumulator, record) => {
-            accumulator.distance += record.distance;
-            accumulator.fuelVolume += record.fuelVolume;
-            accumulator.moneySpent += record.moneySpent;
-        }, {
-            distance: 0,
-            fuelVolume: 0,
-            moneySpent: 0
-        }) ;
-        calcPartialTankRecords.fuelCost = calcPartialTankRecords.moneySpent / calcPartialTankRecords.fuelVolume;
-        // const { distance, fuelVolume, fuelPrice} = data;
-        // const now = new Date();
-        // const fuelConsumption = fuelVolume / distance * 100;
-        // const moneySpent = fuelVolume * fuelPrice;
-        // let result = {
-        //     date : now.toLocaleDateString("ru-RU"),
-        //     time : now.toLocaleTimeString({ hour12 : false }),
-        //     userId : data.userId,
-        //     ...data,
-        //     fuelConsumption : cutToTwoDecimals(fuelConsumption),
-        //     moneySpent : cutToTwoDecimals(moneySpent)
-        // };
+        
+        const { distance, fuelVolume, fuelPrice} = data;
+        const now = new Date();
+        const fuelConsumption = fuelVolume / distance * 100;
+        data.moneySpent = fuelVolume * fuelPrice;
+
+        if(fullTank){
+            const partialTankRecords = await getPartialTankRecords(id);
+            partialTankRecords.push(data);
+            calcPartialTankRecords = partialTankRecords.reduce((accumulator, record) => {
+                accumulator.distance += record.distance;
+                accumulator.fuelVolume += record.fuelVolume;
+                accumulator.moneySpent += record.moneySpent;
+
+                return accumulator;
+            }, {
+                distance: 0,
+                fuelVolume: 0,
+                moneySpent: 0
+            }) ;
+            calcPartialTankRecords.fuelCost = calcPartialTankRecords.moneySpent / calcPartialTankRecords.fuelVolume;
+            data = calcPartialTankRecords;
+            console.log('fulltankRecords', data);
+        }
+
+        let result = {
+            date : now.toLocaleDateString("ru-RU"),
+            time : now.toLocaleTimeString({ hour12 : false }),
+            userId : data.userId,
+            ...data,
+            fuelConsumption : cutToTwoDecimals(fuelConsumption),
+            moneySpent : cutToTwoDecimals(moneySpent)
+        };
        
         return result;
     
