@@ -148,7 +148,7 @@ async function checkAuthorization(){
         } else {
             document.getElementById('lastRecordBlock').removeAttribute('hidden');
             const data = await response.json();
-            delete data.fullTank;
+            console.log('authorization',data);
             insertDataToHtml(data);
             lastMileage = data.totalMileage
         }
@@ -197,13 +197,14 @@ document.getElementById('add-record-form').addEventListener('submit', async (e) 
     }
 
     const formData = getAndValidateInputs(inputIds, userId, lastMileage);
-    formData.fullTank = document.getElementById('fullTank').checked;
     
     if(!formData){
         console.log('validation failed');
         return;
     } 
 
+    formData.fullTank = document.getElementById('fullTank').checked;
+    
     const response = await fetch('/addRecord', { 
         method: 'POST',
         headers: {
@@ -212,7 +213,7 @@ document.getElementById('add-record-form').addEventListener('submit', async (e) 
         body: JSON.stringify(formData),
     });
     const data = await response.json();
-    
+    console.log('inserting...')
     insertDataToHtml(data);
     lastMileage = data.totalMileage;
 })

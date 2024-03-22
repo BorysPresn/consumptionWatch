@@ -1,28 +1,33 @@
-const { getAllMileageRecords, getInitialMileage, getLastMileageRecord, getPartialTankRecords } = require("./database");
+const { getAllMileageRecords, getInitialMileage, getLastFullTankedRecord, getLatestMileageRecord, getPartialTankRecords } = require("./database");
 
 async function processData(data, id){
     try {
-        const calcPartialTankRecords = {};
-        const lastRecord = await getLastMileageRecord(id);
+        const dataToProcess = {...data};
+        delete dataToProcess.userId;
+        delete dataToProcess.fullTank;
+        let calcPartialTankRecords = {};
+        const lastRecord = await getLastFullTankedRecord(id);
         // console.log('last record : ', lastRecord, data.userId)
         const recordToUSe = lastRecord ? lastRecord.totalMileage : await getInitialMileage(data.userId);
         // console.log('recordToUse : ', recordToUSe);
-        const valid = checkValidity(data, recordToUSe);
+        const valid = checkValidity(dataToProcess, recordToUSe);
         // console.log("valid = " + valid)
         
         if(!valid) {
-            console.log('imhere')
+            console.log('in ProcessData() "notValid"')
             return null;
         }
         
-        const { distance, fuelVolume, fuelPrice} = data;
+        const { distance, fuelVolume, fuelPrice } = data;
         const now = new Date();
         const fuelConsumption = fuelVolume / distance * 100;
-        data.moneySpent = fuelVolume * fuelPrice;
-
-        if(fullTank){
+        const moneySpent = fuelVolume * fuelPrice;
+        dataToProcess.moneySpent = moneySpent;
+        //if tanked full tank - check all records in DB for fullTank : false, process and finaly delete them
+        if(data.fullTank){
             const partialTankRecords = await getPartialTankRecords(id);
-            partialTankRecords.push(data);
+            console.log("partial records", partialTankRecords)
+            partialTankRecords.push(dataToProcess);
             calcPartialTankRecords = partialTankRecords.reduce((accumulator, record) => {
                 accumulator.distance += record.distance;
                 accumulator.fuelVolume += record.fuelVolume;
@@ -34,15 +39,18 @@ async function processData(data, id){
                 fuelVolume: 0,
                 moneySpent: 0
             }) ;
-            calcPartialTankRecords.fuelCost = calcPartialTankRecords.moneySpent / calcPartialTankRecords.fuelVolume;
-            data = calcPartialTankRecords;
-            console.log('fulltankRecords', data);
+            calcPartialTankRecords.fuelPrice = cutToTwoDecimals(calcPartialTankRecords.moneySpent / calcPartialTankRecords.fuelVolume);
+            console.log("fuelCost", calcPartialTankRecords.fuelPrice)
+            data = {...data, ...dataToProcess, ...calcPartialTankRecords};
+            console.log('dataToProcess', dataToProcess, 'calcPartialTankRecords', calcPartialTankRecords)
+            //deleting fullTank: false records
+            console.log('fulltankRecord', data);
         }
 
         let result = {
             date : now.toLocaleDateString("ru-RU"),
             time : now.toLocaleTimeString({ hour12 : false }),
-            userId : data.userId,
+            //userId : data.userId,
             ...data,
             fuelConsumption : cutToTwoDecimals(fuelConsumption),
             moneySpent : cutToTwoDecimals(moneySpent)
@@ -101,8 +109,10 @@ function cutToTwoDecimals(number) {
 function checkValidity(data, record) {
     newData = {...data};
     delete newData.userId;
+    delete newData.fullTank;
+    console.log('inCheckValidity', newData)
     const validData =  Object.values(newData).every(value => !Number.isNaN(value) && value > 0);
-    console.log('checkValidity()\n ','data= ' + JSON.stringify(newData),'\n', 'data = ' + JSON.stringify(data) );
+    // console.log('checkValidity()\n ','data= ' + JSON.stringify(newData),'\n', 'data = ' + JSON.stringify(data) );
     if(!validData) {
         return false;
     }

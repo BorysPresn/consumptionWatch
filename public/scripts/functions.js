@@ -27,6 +27,7 @@ export function getAndValidateInputs(ids, id, lastMileage){
     
     // console.log('before', formData)
     for(let id of ids){
+        
         let input = document.getElementById(id)
         if(formData[id] == null){
             formData[id] = calculateData(id, formData);
@@ -59,9 +60,19 @@ export function getAndValidateInputs(ids, id, lastMileage){
 }
 
 export function insertDataToHtml(data) {
+    document.getElementById('underfueled').hidden = true;
+    if(data.fullTank === false){
+        document.getElementById('underfueled').hidden = false;
+    }
+    console.log('inFunction', data)
     Object.keys(data).forEach(key => {
+        
         let elemId = key+'Value';
-        document.getElementById(elemId).textContent = data[key];
+        console.log(elemId)
+        let elem = document.getElementById(elemId);
+        if(elem){
+            elem.textContent = data[key];
+        }
     })
 }
 
@@ -92,6 +103,7 @@ export function showBlock(blockName, blockArray) {
 }
 
 export function clearRecordBlock(){
+    document.getElementById('underfueled').setAttribute('hidden');
     Array.from(document.getElementById('lastRecordBlock').querySelectorAll('.text')).forEach(elem => elem.textContent = '--');
 }
 

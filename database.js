@@ -20,7 +20,7 @@ async function run() {
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
+    
   } finally {
     // Ensures that the client will close when you finish/error
     //await client.close();
@@ -64,11 +64,18 @@ async function getAllMileageRecords(userId) {
     return {success : true, message : "succes", data : mileageCollection}
 }
 
-async function getLastMileageRecord(id) {
+async function getLastFullTankedRecord(id) {
     const db = await connectToDatabase();
     const mileageCollection = db.collection('mileage');
     // Замените на ваш фактический запрос для получения последней записи
     return mileageCollection.findOne({userId : id, fullTank: true}, { sort: { _id: -1 } });
+}
+
+async function getLatestMileageRecord(id) {
+  const db = await connectToDatabase();
+  const mileageCollection = db.collection('mileage');
+  // Замените на ваш фактический запрос для получения последней записи
+  return mileageCollection.findOne({userId : id, fullTank: false}, { sort: { _id: -1 } });
 }
 
 async function getPartialTankRecords(id) {
@@ -168,7 +175,8 @@ module.exports = {
   connectToDatabase, 
   insertMileageRecord, 
   getAllMileageRecords, 
-  getLastMileageRecord,
+  getLastFullTankedRecord,
+  getLatestMileageRecord,
   getPartialTankRecords, 
   // deleteAllMileageRecords, 
   getInitialMileage,

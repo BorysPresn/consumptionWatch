@@ -9,7 +9,8 @@ const {
   client,
   insertMileageRecord, 
   getAllMileageRecords, 
-  getLastMileageRecord, 
+  getLastFullTankedRecord,
+  getLatestMileageRecord, 
   getInitialMileage, 
   insertNewUser,
   checkUser
@@ -22,21 +23,24 @@ app.post('/addRecord', async (req, res) => {
   try {
     const record = req.body;
     const userId = req.body.userId;
-    
     const processedData = await processData(record, userId);
     if(processedData == null){
       res.status(500).json({ error : 'Error while data validating' });
       return;
     }
     console.log('processed data = ' + JSON.stringify(processedData))
-    await insertMileageRecord(processedData);
-    const lastRecord = await getLastMileageRecord(userId);
+    const insert = await insertMileageRecord(processedData);
+    if(!insert.success){
+      throw new Error('Record inserting failed');
+    }
+    //const lastRecord = record.fulltank ? await getLastFullTankedRecord(userId) : record.totalMileage;
     // const { userId, _id, ...respToClient } = lastRecord;
-    delete lastRecord.userId;
-    delete lastRecord._id;
-    res.status(200).json(lastRecord);
+    console.log('server, last record after inserting', processedData)
+    delete processedData.userId;
+    delete processedData._id;
+    res.status(200).json(processedData);
   } catch (error) {
-      console.error(error);
+      console.error(error.message);
       res.status(500).json({ error: 'Internal Server Error' });
   }
 });
@@ -84,7 +88,7 @@ app.post('/login', async (req, res) => {
 app.get('/lastRecord', async (req, res) => {
   try {
     const userId = req.query.userId;
-    const response = await getLastMileageRecord(userId);
+    const response = await getLatestMileageRecord(userId);
     if(response){
       delete response.userId;
       delete response._id;
@@ -99,6 +103,8 @@ app.get('/lastRecord', async (req, res) => {
     res.status(500).json({ error : 'Internal server error' });
   }
 })
+
+// getting initial mileage
 
 app.get('/users', async (req, res)=> {
   try {
