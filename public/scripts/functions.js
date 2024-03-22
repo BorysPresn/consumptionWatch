@@ -16,8 +16,10 @@ export function getAndValidateInputs(ids, id, lastMileage){
         let input = document.getElementById(id)
         let value = input.value.replace(',', '.');
         formData[id] = value;
+        //console.log(id, formData[id]);
         if((id == 'totalMileage'||id == 'distance') && !formData[id]) {
             formData[id] = null;
+            console.log('fData = null');
         }
     }
     if(!formData.totalMileage && !formData.distance){
@@ -30,7 +32,8 @@ export function getAndValidateInputs(ids, id, lastMileage){
         
         let input = document.getElementById(id)
         if(formData[id] == null){
-            formData[id] = calculateData(id, formData);
+            console.log('lastMileage', lastMileage)
+            formData[id] = calculateData(id, formData, lastMileage);
         }
         let value = parseFloat(formData[id]);
         if(id == 'totalMileage' && value != 0 && value <= lastMileage){
@@ -55,7 +58,7 @@ export function getAndValidateInputs(ids, id, lastMileage){
         }
     }
     formData = {...formData, userId : id}
-    console.log(formData)
+    // console.log(formData)
     return isValid ? formData : null;
 }
 
@@ -67,8 +70,8 @@ export function insertDataToHtml(data) {
     console.log('inFunction', data)
     Object.keys(data).forEach(key => {
         
-        let elemId = key+'Value';
-        console.log(elemId)
+        let elemId = key+'Value'
+        //console.log(elemId)
         let elem = document.getElementById(elemId);
         if(elem){
             elem.textContent = data[key];
@@ -76,14 +79,14 @@ export function insertDataToHtml(data) {
     })
 }
 
-function calculateData(key, data) {
-    let prevMileage = parseFloat(document.getElementById(key + 'Value').innerText);
-    prevMileage = Number.isNaN(prevMileage) ? sessionStorage.getItem('initialMileage') : prevMileage;
+function calculateData(key, data, lastMileage) {
+  
+    console.log('lastMileage', lastMileage);
     if(key == 'totalMileage') {
-        return prevMileage + data.distance;
+        return parseFloat((lastMileage + data.distance).toFixed(2));
     }
     if(key == 'distance') {
-        return data.totalMileage - prevMileage;
+        return parseFloat((data.totalMileage - lastMileage).toFixed(2));
     }
 }
 

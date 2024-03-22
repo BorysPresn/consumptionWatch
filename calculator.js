@@ -1,4 +1,4 @@
-const { getAllMileageRecords, getInitialMileage, getLastFullTankedRecord, getLatestMileageRecord, getPartialTankRecords } = require("./database");
+const { getAllMileageRecords, getInitialMileage, getLastFullTankedRecord, getLatestMileageRecord, getPartialTankRecords, deletePartialTankRecords } = require("./database");
 
 async function processData(data, id){
     try {
@@ -26,7 +26,7 @@ async function processData(data, id){
         //if tanked full tank - check all records in DB for fullTank : false, process and finaly delete them
         if(data.fullTank){
             const partialTankRecords = await getPartialTankRecords(id);
-            console.log("partial records", partialTankRecords)
+            console.log("partial records array?", partialTankRecords)
             partialTankRecords.push(dataToProcess);
             calcPartialTankRecords = partialTankRecords.reduce((accumulator, record) => {
                 accumulator.distance += record.distance;
@@ -40,11 +40,11 @@ async function processData(data, id){
                 moneySpent: 0
             }) ;
             calcPartialTankRecords.fuelPrice = cutToTwoDecimals(calcPartialTankRecords.moneySpent / calcPartialTankRecords.fuelVolume);
-            console.log("fuelCost", calcPartialTankRecords.fuelPrice)
+            // console.log("fuelCost", calcPartialTankRecords.fuelPrice)
             data = {...data, ...dataToProcess, ...calcPartialTankRecords};
-            console.log('dataToProcess', dataToProcess, 'calcPartialTankRecords', calcPartialTankRecords)
-            //deleting fullTank: false records
-            console.log('fulltankRecord', data);
+            // console.log('dataToProcess', dataToProcess, 'calcPartialTankRecords', calcPartialTankRecords)
+            const deleted = await deletePartialTankRecords(id)
+            console.log('deleted', deleted);
         }
 
         let result = {

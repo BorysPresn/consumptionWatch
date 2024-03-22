@@ -64,6 +64,7 @@ async function getAllMileageRecords(userId) {
     return {success : true, message : "succes", data : mileageCollection}
 }
 
+// Last Full tanked record
 async function getLastFullTankedRecord(id) {
     const db = await connectToDatabase();
     const mileageCollection = db.collection('mileage');
@@ -71,19 +72,33 @@ async function getLastFullTankedRecord(id) {
     return mileageCollection.findOne({userId : id, fullTank: true}, { sort: { _id: -1 } });
 }
 
+//latest record
 async function getLatestMileageRecord(id) {
   const db = await connectToDatabase();
   const mileageCollection = db.collection('mileage');
   // Замените на ваш фактический запрос для получения последней записи
-  return mileageCollection.findOne({userId : id, fullTank: false}, { sort: { _id: -1 } });
+  return mileageCollection.findOne({userId : id}, { sort: { _id: -1 } });
 }
 
+//hettitng all {fullTank: false} records
 async function getPartialTankRecords(id) {
   const db = await connectToDatabase();
   const mileageCollection = db.collection('mileage');
   return mileageCollection.find({ userId: id, fullTank: false }).toArray();
 }
 
+//deleting all {fullTank:false} records (after fueling a full tank we don't need them)
+async function deletePartialTankRecords(id) {
+  try {
+    const db = await connectToDatabase();
+    const mileageCollection = db.collection('mileage');
+    return mileageCollection.deleteMany({userId: id, fullTank: false});
+  } catch (error) {
+    console.error(error.message);
+    throw error;
+  }
+}
+//inserting a new user
 async function insertNewUser(record) {
   const {email, password, initialMileage} = record;
   console.log(email, password, initialMileage)
@@ -111,7 +126,7 @@ async function insertNewUser(record) {
       initialMileage : user.initialMileage 
     };
   } catch (error) {
-      console.error(error);
+      console.error(error.message);
       throw error;
   }
 }
@@ -170,6 +185,7 @@ async function getInitialMileage(id) {
 }
 
 
+
 module.exports = {
   client, 
   connectToDatabase, 
@@ -178,7 +194,7 @@ module.exports = {
   getLastFullTankedRecord,
   getLatestMileageRecord,
   getPartialTankRecords, 
-  // deleteAllMileageRecords, 
+  deletePartialTankRecords, 
   getInitialMileage,
   insertNewUser,
   checkUser
