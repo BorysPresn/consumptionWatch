@@ -106,7 +106,8 @@ export function showBlock(blockName, blockArray) {
 }
 
 export function clearRecordBlock(){
-    document.getElementById('underfueled').setAttribute('hidden');
+    document.getElementById('underfueled').setAttribute('hidden', true);
+    document.getElementById('historyBlock').innerHTML = '';
     Array.from(document.getElementById('lastRecordBlock').querySelectorAll('.text')).forEach(elem => elem.textContent = '--');
 }
 

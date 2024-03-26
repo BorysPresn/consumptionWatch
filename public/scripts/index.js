@@ -223,42 +223,65 @@ addRecrdForm.addEventListener('submit', async (e) => {
 
 // History
 
-document.getElementById('history').addEventListener('click', async function (e) {
-    
-    const userId = getCookie('userId');
-    const history = await fetch(`/history?userId=${userId}`,{
-        method : 'GET',
-        headers : {
-            'Content-Type' : 'application/json',
+document.querySelectorAll(`[data-target="historyBlock"]`).forEach(elem => elem.addEventListener('click', generateHistory));
+
+async function generateHistory() {
+    try {
+        const userId = getCookie('userId');
+
+        if(!userId){
+            console.log('no userId');
+            showBlock('loginBlock', authItems);
+            return;
         }
-    })
-    const response = await history.json();
-    console.log(response)
-    response.data.reverse();
-    response.data.forEach(elem => {
 
-        const rowDiv = document.createElement('div');
-        rowDiv.className = "row px-1";
+        const response = await fetch(`/history?userId=${userId}`,{
+            method : 'GET',
+            headers : {
+                'Content-Type' : 'application/json',
+            }
+        })
+        if(!response.ok){
+            throw new Error(`HTTP error! status: ${response.status}`)
+        }
+        const history = await response.json();
         
-        const colDiv = document.createElement('div');
-        colDiv.className = "col border rounded-1 mt-2 p-2";
-
-        colDiv.innerHTML = `<div class="row">
-                                    <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>
-                                    <div class="col-1 text-end">
-                                        <button type="button" class="btn-close" aria-label="Close"></button>
+        console.log(history)
+        historyBlock.innerHTML = '';
+        history.data.reverse();
+        history.data.forEach(elem => {
+            
+            const rowDiv = document.createElement('div');
+            rowDiv.className = "row px-1";
+            
+            const colDiv = document.createElement('div');
+            colDiv.className = "col border rounded-1 mt-2 p-2";
+            
+            colDiv.innerHTML = `<div class="row">
+                                        <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>
+                                        <div class="col-1 text-end">
+                                            <button type="button" class="btn-close" aria-label="Close"></button>
+                                        </div>
                                     </div>
-                                </div>
-                                <hr>
-                                <div class="row ps-2 ps-sm-0">
-                                    <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Distance : </b>${elem.distance} km</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Fueled : </b>${elem.fuelVolume} L</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Fuel price : </b>${elem.fuelPrice} Zł/L</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Fuel cost : </b>${elem.moneySpent} Zł</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
-                            </div>`;
-        rowDiv.appendChild(colDiv);
-        historyBlock.appendChild(rowDiv);
-    });
-});
+                                    <hr>
+                                    <div class="row ps-2 ps-sm-0">
+                                        <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
+                                        <div class="col-12 col-sm-6 text-left"><b>Distance : </b>${elem.distance} km</div>
+                                        <div class="col-12 col-sm-6 text-left"><b>Fueled : </b>${elem.fuelVolume} L</div>
+                                        <div class="col-12 col-sm-6 text-left"><b>Fuel price : </b>${elem.fuelPrice} Zł/L</div>
+                                        <div class="col-12 col-sm-6 text-left"><b>Fuel cost : </b>${elem.moneySpent} Zł</div>
+                                        <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
+                                </div>`;
+            rowDiv.appendChild(colDiv);
+            if(elem.fullTank === false){
+                let redBlock = document.createElement('div');
+                redBlock.className = "text-danger fw-bold";
+                redBlock.textContent = 'underfueled';
+                colDiv.prepend(redBlock);
+            }
+            historyBlock.appendChild(rowDiv);
+        });
+    } catch (error) {
+        console.error('Error while generating history', error);
+    }
+};
