@@ -234,6 +234,7 @@ document.getElementById('history').addEventListener('click', async function (e) 
     })
     const response = await history.json();
     console.log(response)
+    response.data.reverse();
     response.data.forEach(elem => {
 
         const rowDiv = document.createElement('div');
