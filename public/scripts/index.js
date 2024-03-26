@@ -1,4 +1,4 @@
-import { getCookie, getAndValidateInputs, insertDataToHtml, showBlock, clearRecordBlock }  from "./functions.js"
+import { getCookie, getAndValidateInputs, insertDataToHtml, showBlock, clearBlocks }  from "./functions.js"
 let lastMileage = null;
 
 let authBlocks = {
@@ -15,7 +15,7 @@ let contentBlocks = {
     aboutBlock : document.getElementById('aboutBlock'),
     helpBlock : document.getElementById('helpBlock')
 };
-const navigateItems = Object.values(contentBlocks);
+const contentItems = Object.values(contentBlocks);
 
 //checking authorization
 document.addEventListener('DOMContentLoaded', checkAuthorization);
@@ -49,7 +49,8 @@ document.getElementById('login-form').addEventListener('submit', async function 
         document.cookie = `token=${token};path=/;max-age=1800;secure`;
         document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
         showBlock('mainContentBlock', authItems);
-        showBlock("addRecordBlock", navigateItems);
+        showBlock("addRecordBlock", contentItems);
+        document.querySelectorAll(`[data-target="addRecordBlock"]`).forEach(elem => elem.classList.add('active'));
         loginErrorBlock.textContent = '';
         await checkAuthorization();
         return;
@@ -93,7 +94,8 @@ document.getElementById('registration-form').addEventListener('submit', async fu
         document.cookie = `token=${token};path=/;max-age=1800;secure`;
         document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
         showBlock('mainContentBlock', authItems);
-        showBlock("addRecordBlock", navigateItems);
+        showBlock("addRecordBlock", contentItems);
+        document.querySelectorAll(`[data-target="addRecordBlock"]`).forEach(elem => elem.classList.add('active'));
         errorBlock.textContent = '';
         mileageInput.classList.remove('error');
         await checkAuthorization();
@@ -115,7 +117,7 @@ async function checkAuthorization(){
         }
         
         showBlock("mainContentBlock", authItems);
-        showBlock("addRecordBlock", navigateItems);
+        showBlock("addRecordBlock", contentItems);
 
         const userId = getCookie('userId');
         const response = await fetch(`/lastRecord?userId=${userId}`, {
@@ -162,10 +164,15 @@ async function checkAuthorization(){
 const logoutButtons = document.querySelectorAll('.logout');
 logoutButtons.forEach(element => {
     element.addEventListener('click', () => {
+        const offcanvasNavbar = document.getElementById('offcanvasNavbar');
+        const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasNavbar);
+        if (bsOffcanvas) {
+            bsOffcanvas.hide();
+        }
         document.cookie = `token=;path=/;max-age=0;secure`;
         document.cookie = `userId=;path=/;max-age=0;secure`;
         showBlock('loginBlock', authItems);
-        clearRecordBlock();
+        clearBlocks();
     })
 });
 
@@ -177,9 +184,27 @@ sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
     if(target){
         document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
         target.classList.add('active');
-        showBlock(target.dataset.target, navigateItems);
+
+        const action = target.dataset.target;
+
+        switch (action) {
+            case 'addRecordBlock':
+                showBlock(action, contentItems)
+                break;
+            case 'historyBlock':
+                generateHistory();
+                showBlock(action, contentItems);
+                break;
+            case 'statisticBlock':
+                showBlock(action, contentItems)
+                break;
+            case 'aboutBlock':
+                showBlock(action, contentItems)
+                break;    
+            default:
+                break;
+        }
     }
-    
 }));
 
 
@@ -223,8 +248,6 @@ addRecrdForm.addEventListener('submit', async (e) => {
 
 // History
 
-document.querySelectorAll(`[data-target="historyBlock"]`).forEach(elem => elem.addEventListener('click', generateHistory));
-
 async function generateHistory() {
     try {
         const userId = getCookie('userId');
@@ -247,7 +270,7 @@ async function generateHistory() {
         const history = await response.json();
         
         console.log(history)
-        historyBlock.innerHTML = '';
+        contentBlocks.historyBlock.innerHTML = '';
         history.data.reverse();
         history.data.forEach(elem => {
             
@@ -258,11 +281,11 @@ async function generateHistory() {
             colDiv.className = "col border rounded-1 mt-2 p-2";
             
             colDiv.innerHTML = `<div class="row">
-                                        <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>
-                                        <div class="col-1 text-end">
-                                            <button type="button" class="btn-close" aria-label="Close"></button>
-                                        </div>
-                                    </div>
+                                        <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>`+
+                                        // <div class="col-1 text-end">
+                                        //     <button type="button" class="btn-close" aria-label="Close"></button>
+                                        // </div>
+                                    `</div>
                                     <hr>
                                     <div class="row ps-2 ps-sm-0">
                                         <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
@@ -279,7 +302,7 @@ async function generateHistory() {
                 redBlock.textContent = 'underfueled';
                 colDiv.prepend(redBlock);
             }
-            historyBlock.appendChild(rowDiv);
+            contentBlocks.historyBlock.appendChild(rowDiv);
         });
     } catch (error) {
         console.error('Error while generating history', error);
