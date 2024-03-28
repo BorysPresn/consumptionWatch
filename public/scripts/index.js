@@ -190,26 +190,6 @@ sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
             generateHistory();
         }
         showBlock(action, contentItems)
-        // switch (action) {
-        //     case 'addRecordBlock':
-        //         showBlock(action, contentItems)
-        //         break;
-        //     case 'historyBlock':
-        //         generateHistory();
-        //         showBlock(action, contentItems);
-        //         break;
-        //     case 'statisticBlock':
-        //         showBlock(action, contentItems)
-        //         break;
-        //     case 'aboutBlock':
-        //         showBlock(action, contentItems)
-        //         break; 
-        //     case 'helpBlock':
-        //         showBlock(action, contentItems)
-        //         break;   
-        //     default:
-        //         break;
-        // }
     }
 }));
 
