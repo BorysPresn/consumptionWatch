@@ -185,26 +185,31 @@ sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
     if(target){
         document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
         target.classList.add('active');
-
         const action = target.dataset.target;
-
-        switch (action) {
-            case 'addRecordBlock':
-                showBlock(action, contentItems)
-                break;
-            case 'historyBlock':
-                generateHistory();
-                showBlock(action, contentItems);
-                break;
-            case 'statisticBlock':
-                showBlock(action, contentItems)
-                break;
-            case 'aboutBlock':
-                showBlock(action, contentItems)
-                break;    
-            default:
-                break;
+        if(action === 'historyBlock') {
+            generateHistory();
         }
+        showBlock(action, contentItems)
+        // switch (action) {
+        //     case 'addRecordBlock':
+        //         showBlock(action, contentItems)
+        //         break;
+        //     case 'historyBlock':
+        //         generateHistory();
+        //         showBlock(action, contentItems);
+        //         break;
+        //     case 'statisticBlock':
+        //         showBlock(action, contentItems)
+        //         break;
+        //     case 'aboutBlock':
+        //         showBlock(action, contentItems)
+        //         break; 
+        //     case 'helpBlock':
+        //         showBlock(action, contentItems)
+        //         break;   
+        //     default:
+        //         break;
+        // }
     }
 }));
 
