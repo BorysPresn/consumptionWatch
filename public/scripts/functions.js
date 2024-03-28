@@ -8,58 +8,49 @@ export function getCookie(name) {
 }
 
 export function getAndValidateInputs(ids, id, lastMileage){
-    let lastMileageElem = document.querySelector('.record-item.total-mileage');
-    let isValid = true;
-    let errorMessage = document.getElementById('error-message');
-    let formData = {};
+    const response = {
+        isValid: true,
+        errorMessage: '',
+        inputElem: null,
+        formData: {}
+    }
     for (let id of ids){
         let input = document.getElementById(id)
-        let value = input.value.replace(',', '.');
-        formData[id] = value;
-        //console.log(id, formData[id]);
-        if((id == 'totalMileage'||id == 'distance') && !formData[id]) {
-            formData[id] = null;
-            console.log('fData = null');
+        let value = parseFloat(input.value.replace(',', '.'));
+        response.formData[id] = value;
+        if((id == 'totalMileage'||id == 'distance') && !response.formData[id]) {
+            response.formData[id] = null;
         }
     }
-    if(!formData.totalMileage && !formData.distance){
-        errorMessage.textContent = 'At least one of these inputs must been filled';
-        return;
+    for(let id of ids){
+        response.inputElem = document.getElementById(id)
+        if(response.formData[id] == null){
+            response.formData[id] = calculateData(id, response.formData, lastMileage);
+        }
+        let value = response.formData[id];
+        if(id == 'totalMileage' && value != 0 && value <= lastMileage){
+            response.errorMessage = "Mileage can`t be less or equal to the last mileage";
+            response.isValid = false;
+            return response;
+        } else if(Number.isNaN(value) || value <= 0){
+            response.errorMessage = "Only positive numbers are allowed";
+            response.isValid = false;
+            return response;
+        } else {
+            response.errorMessage = '';
+            response.formData[id] = value;
+        }
     }
     
-    // console.log('before', formData)
-    for(let id of ids){
-        
-        let input = document.getElementById(id)
-        if(formData[id] == null){
-            console.log('lastMileage', lastMileage)
-            formData[id] = calculateData(id, formData, lastMileage);
-        }
-        let value = parseFloat(formData[id]);
-        if(id == 'totalMileage' && value != 0 && value <= lastMileage){
-            errorMessage.textContent = "'Mileage can`t be less or equal to the last mileage'";
-            input.classList.add('error');
-            
-            lastMileageElem.classList.add('bg-danger');
-            isValid = false;
-            break;
-        }
-        else if(Number.isNaN(value) || value <= 0){
-            // if(id=='totalMileage' || id == 'distance') continue;
-            input.classList.add('error');
-            errorMessage.textContent = "Only positive numbers are allowed";
-            isValid = false;
-            break;
-        } else {
-            input.classList.remove('error');
-            lastMileageElem.classList.remove('bg-danger');
-            errorMessage.textContent = '';
-            formData[id] = value;
-        }
+    if(response.formData.totalMileage - response.formData.distance != lastMileage){console.log('before matching', formData);
+        response.errorMessage = "Check inputed values in distance and total mileage. They does not match";
+        response.isValid = false;
+        return response;
     }
-    formData = {...formData, userId : id}
-    // console.log(formData)
-    return isValid ? formData : null;
+    response.formData.fullTank = document.getElementById('fullTank').checked;
+    response.formData.userId = id;
+    console.log(response.formData)
+    return response;
 }
 
 export function insertDataToHtml(data) {
@@ -67,11 +58,9 @@ export function insertDataToHtml(data) {
     if(data.fullTank === false){
         document.getElementById('underfueled').hidden = false;
     }
-    console.log('inFunction', data)
     Object.keys(data).forEach(key => {
         
         let elemId = key+'Value'
-        //console.log(elemId)
         let elem = document.getElementById(elemId);
         if(elem){
             elem.textContent = data[key];
@@ -81,7 +70,6 @@ export function insertDataToHtml(data) {
 
 function calculateData(key, data, lastMileage) {
   
-    console.log('lastMileage', lastMileage);
     if(key == 'totalMileage') {
         return parseFloat((lastMileage + data.distance).toFixed(2));
     }
@@ -97,10 +85,8 @@ export function showBlock(blockName, blockArray) {
         if(elem.id === blockName) {
             blockToShow = elem;
         }
-        // console.log('showBlock.display.none', elem)
         elem.style.display = 'none';
     });
-    // console.log(blockToShow);
     blockToShow.style.display = 'block';
     blockToShow = null;
 }
@@ -112,3 +98,14 @@ export function clearBlocks(){
     Array.from(document.getElementById('lastRecordBlock').querySelectorAll('.text')).forEach(elem => elem.textContent = '--');
 }
 
+export function showError(obj) {
+    if(obj.inputElem){
+        obj.inputElem.classList.add('error');
+    }
+    document.getElementById('error-message').textContent = obj.errorMessage;
+}
+
+export function removeError(form) {
+    document.getElementById('error-message').textContent = '';
+    form.querySelectorAll('INPUT').forEach(elem => elem.classList.remove('error'));
+}

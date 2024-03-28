@@ -1,9 +1,9 @@
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-const uri = "mongodb+srv://boryspresniak:Anubag7981MongoDB@cluster0.ub2nw6k.mongodb.net/?retryWrites=true&w=majority";
+const uri = process.env.DATABASE_URI;
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const jwt = require('jsonwebtoken');
-const secretKey = 'this_is_a_very_secret_key';
+const secretKey = process.env.JWT_SECRET_KEY;
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
   serverApi: {

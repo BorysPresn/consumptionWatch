@@ -1,4 +1,4 @@
-import { getCookie, getAndValidateInputs, insertDataToHtml, showBlock, clearBlocks }  from "./functions.js"
+import { getCookie, getAndValidateInputs, insertDataToHtml, showBlock, clearBlocks, showError, removeError }  from "./functions.js"
 let lastMileage = null;
 
 let authBlocks = {
@@ -43,7 +43,7 @@ document.getElementById('login-form').addEventListener('submit', async function 
         body: JSON.stringify(formData),
     });
     const {userId, token, message, initialMileage} = await response.json();
-    console.log(response)
+    // console.log(response)
     if(response.ok) {
         sessionStorage.setItem('initialMileage', initialMileage);
         document.cookie = `token=${token};path=/;max-age=1800;secure`;
@@ -150,7 +150,7 @@ async function checkAuthorization(){
         } else {
             document.getElementById('lastRecordBlock').removeAttribute('hidden');
             const data = await response.json();
-            console.log('authorization',data);
+            // console.log('authorization',data);
             insertDataToHtml(data);
             lastMileage = data.totalMileage
         }
@@ -171,6 +171,7 @@ logoutButtons.forEach(element => {
         }
         document.cookie = `token=;path=/;max-age=0;secure`;
         document.cookie = `userId=;path=/;max-age=0;secure`;
+        sessionStorage.clear();
         showBlock('loginBlock', authItems);
         clearBlocks();
     })
@@ -211,39 +212,40 @@ sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
 // add Record
 const addRecrdForm = document.getElementById('add-record-form');
 addRecrdForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const inputIds = ['fuelVolume', 'distance', 'totalMileage', 'fuelPrice'];
-    const userId = getCookie('userId');
-    
-    if(!userId){
-        console.log('no userId');
-        showBlock('loginBlock', authItems);
-        return;
+    try {
+        e.preventDefault();
+        const inputIds = ['fuelVolume', 'distance', 'totalMileage', 'fuelPrice'];
+        const userId = getCookie('userId');
+        
+        if(!userId){
+            console.log('no userId');
+            showBlock('loginBlock', authItems);
+            return;
+        }
+
+        const validationResponse = getAndValidateInputs(inputIds, userId, lastMileage);
+        console.log(validationResponse)
+        if(!validationResponse.isValid){
+            showError(validationResponse);
+            throw new Error(validationResponse.errorMessage);
+        } 
+        removeError(addRecrdForm);
+        const response = await fetch('/addRecord', { 
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(validationResponse.formData),
+        });
+        const data = await response.json();
+
+        insertDataToHtml(data);
+        addRecrdForm.reset();
+        
+        lastMileage = data.totalMileage;
+    } catch (error) {
+        console.error(error);
     }
-
-    const formData = getAndValidateInputs(inputIds, userId, lastMileage);
-    
-    if(!formData){
-        console.log('validation failed');
-        return;
-    } 
-
-    formData.fullTank = document.getElementById('fullTank').checked;
-    
-    const response = await fetch('/addRecord', { 
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-    });
-    const data = await response.json();
-
-    console.log('inserting...')
-    insertDataToHtml(data);
-    addRecrdForm.reset();
-    
-    lastMileage = data.totalMileage;
 })
 
 // History
