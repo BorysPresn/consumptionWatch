@@ -42,15 +42,48 @@ export function getAndValidateInputs(ids, id, lastMileage){
         }
     }
     
-    if(response.formData.totalMileage - response.formData.distance != lastMileage){console.log('before matching', formData);
+    if(response.formData.totalMileage - response.formData.distance != lastMileage){
+        response.inputElem = getElements(['distance', 'totalMileage', 'totalMileageValue']);
         response.errorMessage = "Check inputed values in distance and total mileage. They does not match";
         response.isValid = false;
         return response;
     }
-    response.formData.fullTank = document.getElementById('fullTank').checked;
+    const fuelStatus = document.querySelector('[name="fuelTankStatus"]:checked');
+    if(fuelStatus === null){
+        response.inputElem = document.querySelectorAll('.fuel-status-label');
+        response.errorMessage = "Please choose one of these options";
+        response.isValid = false;
+        return response;
+    }
+    response.formData.fullTank = Boolean(fuelStatus.value);
     response.formData.userId = id;
     console.log(response.formData)
     return response;
+}
+
+function calculateData(key, data, lastMileage) {
+  
+    if(key === 'totalMileage') {
+        return parseFloat((lastMileage + data.distance).toFixed(2));
+    }
+    if(key === 'distance') {
+        return parseFloat((data.totalMileage - lastMileage).toFixed(2));
+    }
+}
+
+function getElements(){
+    if(arguments.length === 1){
+        return document.querySelectorAll(arguments[0]);
+    }
+    const result =[];
+    Array.from(arguments.forEach(elem => {
+            const element = document.getElementById(elem);
+            if(element){
+                result.push(element)
+            }
+        })
+    );
+    return result;
 }
 
 export function insertDataToHtml(data) {
@@ -67,17 +100,6 @@ export function insertDataToHtml(data) {
         }
     })
 }
-
-function calculateData(key, data, lastMileage) {
-  
-    if(key == 'totalMileage') {
-        return parseFloat((lastMileage + data.distance).toFixed(2));
-    }
-    if(key == 'distance') {
-        return parseFloat((data.totalMileage - lastMileage).toFixed(2));
-    }
-}
-
 
 export function showBlock(blockName, blockArray) {
     let blockToShow = null;
@@ -99,7 +121,9 @@ export function clearBlocks(){
 }
 
 export function showError(obj) {
-    if(obj.inputElem){
+     if (obj.inputElem && obj.inputElem.length > 0) {
+        obj.inputElem.forEach(elem => elem.classList.add('error'));
+    } else if (obj.inputElem) {
         obj.inputElem.classList.add('error');
     }
     document.getElementById('error-message').textContent = obj.errorMessage;
@@ -107,5 +131,5 @@ export function showError(obj) {
 
 export function removeError(form) {
     document.getElementById('error-message').textContent = '';
-    form.querySelectorAll('INPUT').forEach(elem => elem.classList.remove('error'));
+    form.querySelectorAll('.error').forEach(elem => elem.classList.remove('error'));
 }

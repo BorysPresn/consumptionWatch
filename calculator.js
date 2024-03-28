@@ -3,19 +3,16 @@ const { getAllMileageRecords, getInitialMileage, getLastFullTankedRecord, getLat
 async function processData(data, id){
     try {
         const dataToProcess = {...data};
-        delete dataToProcess.userId;
-        delete dataToProcess.fullTank;
         let calcPartialTankRecords = {};
-        const lastRecord = await getLastFullTankedRecord(id);
-        // console.log('last record : ', lastRecord, data.userId)
+        const lastRecord = await getLatestMileageRecord(id);
         const recordToUSe = lastRecord ? lastRecord.totalMileage : await getInitialMileage(data.userId);
-        // console.log('recordToUse : ', recordToUSe);
-        const valid = checkValidity(dataToProcess, recordToUSe);
-        // console.log("valid = " + valid)
+        if(!recordToUSe){
+            throw new Error(`Error while getting recordToUse`);
+        }
+        const validationResult = checkValidity(dataToProcess, recordToUSe);
         
-        if(!valid) {
-            console.log('in ProcessData() "notValid"')
-            return null;
+        if(!validationResult.success) {
+            throw new Error(`Error! validation failed : ${validationResult.message}`);
         }
         
         const { distance, fuelVolume, fuelPrice } = data;
@@ -26,7 +23,9 @@ async function processData(data, id){
         //if tanked full tank - check all records in DB for fullTank : false, process and finaly delete them
         if(data.fullTank){
             const partialTankRecords = await getPartialTankRecords(id);
-            console.log("partial records array?", partialTankRecords)
+            if(!partialTankRecords){
+                throw new Error(`Error while getting partialTankRecords`);
+            }
             partialTankRecords.push(dataToProcess);
             calcPartialTankRecords = partialTankRecords.reduce((accumulator, record) => {
                 accumulator.distance += record.distance;
@@ -40,17 +39,14 @@ async function processData(data, id){
                 moneySpent: 0
             }) ;
             calcPartialTankRecords.fuelPrice = cutToTwoDecimals(calcPartialTankRecords.moneySpent / calcPartialTankRecords.fuelVolume);
-            // console.log("fuelCost", calcPartialTankRecords.fuelPrice)
-            data = {...data, ...dataToProcess, ...calcPartialTankRecords};
-            // console.log('dataToProcess', dataToProcess, 'calcPartialTankRecords', calcPartialTankRecords)
-            const deleted = await deletePartialTankRecords(id)
-            console.log('deleted', deleted);
+            data = { ...dataToProcess, ...calcPartialTankRecords};
+            await deletePartialTankRecords(id)
         }
 
         let result = {
             date : now.toLocaleDateString("ru-RU"),
             time : now.toLocaleTimeString({ hour12 : false }),
-            //userId : data.userId,
+            
             ...data,
             fuelConsumption : cutToTwoDecimals(fuelConsumption),
             moneySpent : cutToTwoDecimals(moneySpent)
@@ -60,7 +56,7 @@ async function processData(data, id){
     
     } catch (error) {
         console.error(error);
-        throw new Error("Error while processing data");
+        throw error;
     }
 }
 
@@ -107,17 +103,32 @@ function cutToTwoDecimals(number) {
 }
 
 function checkValidity(data, record) {
+    let result = {
+        message: ``,
+        success: true
+    };
     newData = {...data};
+    if(typeof newData.fullTank !== 'boolean'){
+        result.message += `(fullTank: not boolean)\n`;
+        result.success = false;
+    }
     delete newData.userId;
     delete newData.fullTank;
-    console.log('inCheckValidity', newData)
-    const validData =  Object.values(newData).every(value => !Number.isNaN(value) && value > 0);
-    // console.log('checkValidity()\n ','data= ' + JSON.stringify(newData),'\n', 'data = ' + JSON.stringify(data) );
-    if(!validData) {
-        return false;
+
+    for(let key in newData){
+        let value = newData[key];
+        if(!value || Number.isNaN(value) || value <= 0){
+            result.message += `(${key}:${value})\n`;
+            result.success = false;
+        }
     }
-    
-    return data.totalMileage > record;
+        
+    if(newData.totalMileage - newData.distance != record){
+        result.message += `(totalMileage - distance != lastRecord)\n`;
+        result.success = false;
+    }
+   
+    return result;
 }
 
 module.exports = { processData, updateStatistic, getStatistic };

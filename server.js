@@ -34,15 +34,12 @@ app.post('/addRecord', async (req, res) => {
     if(!insert.success){
       throw new Error('Record inserting failed');
     }
-    //const lastRecord = record.fulltank ? await getLastFullTankedRecord(userId) : record.totalMileage;
-    // const { userId, _id, ...respToClient } = lastRecord;
-    console.log('server, last record after inserting', processedData)
+    
     delete processedData.userId;
     delete processedData._id;
     res.status(200).json(processedData);
   } catch (error) {
       console.error(error.message);
-      res.status(500).json({ error: 'Internal Server Error' });
   }
 });
   

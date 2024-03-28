@@ -174,9 +174,15 @@
                                             <input type="text" class="form-control" id="fuelPrice" placeholder="00.0$" required>
                                             <label for="fuelPrice">Input price, $/L</label>
                                         </div>
-                                        <div class="col-12  mb-2 p-2 d-flex gap-2">
-                                            <input type="checkbox" name="fullTank" id="fullTank">
-                                            <label for="fullTank">Full tank</label>
+                                        <div class="row mb-3 px-2 d-flex flex-nowrap ">
+                                            <div class="wrapper col-6 col-sm-6 text-end px-2">
+                                                <input type="radio" class="btn-check" name="fuelTankStatus" id="fullTank" value="1" autocomplete="off">
+                                                <label class="btn btn-outline-success fuel-status-label" for="fullTank">Full Tank</label>
+                                            </div>
+                                            <div class="wrapper col-6 col-sm-6 text-start px-2">
+                                                <input type="radio" class="btn-check" name="fuelTankStatus" id="notFullTank" value="" autocomplete="off">
+                                                <label class="btn btn-outline-warning fuel-status-label" for="notFullTank">NOT Full tank</label>
+                                            </div>
                                         </div>
                                         <div class="row justify-content-center">
                                             <div class="text-danger mb-3 fw-bold text-center" id="error-message"></div>
@@ -210,7 +216,32 @@
                         <p>We are always open to feedback and are willing to improve Consumption Watch so that it meets your needs. Feel free to contact us with suggestions and comments.
                         </p>
                     </div>
-                    <div id="helpBlock">HELP</div>
+                    <div id="helpBlock">
+                        <h2>Help & FAQ</h2>
+                        <h3>Getting Started</h3>
+                        <p>Welcome to Consumption Watch! This application is designed to help you track your vehicle's fuel consumption and manage your driving data effectively. Here are a few steps to get you started:</p>
+                        <ul>
+                            <li><strong>Register an Account:</strong> Start by creating a new account or log in if you already have one.</li>
+                            <li><strong>Add a Record:</strong> Once logged in, you can start adding fuel consumption records by navigating to the "Add Record" section.</li>
+                            <li><strong>View History:</strong> Check your previous entries in the "History" section.</li>
+                            <li><strong>Analyze Statistics:</strong> Visit the "Statistic" section to see comprehensive stats about your fuel consumption.</li>
+                        </ul>
+                    
+                        <h3>Frequently Asked Questions</h3>
+                        <dl>
+                            <dt>How do I reset my password?</dt>
+                            <dd>If you've forgotten your password, please contact support@consumptionwatch.com for assistance.</dd>
+                            
+                            <dt>Can I export my data?</dt>
+                            <dd>Currently, exporting data functionality is not available, but we're working on adding this feature soon.</dd>
+                            
+                            <dt>Is my data secure?</dt>
+                            <dd>Yes, your privacy and data security are our top priorities. We use encryption and other security measures to protect your information.</dd>
+                        </dl>
+                    
+                        <h3>Need More Help?</h3>
+                        <p>If you have any other questions or need further assistance, don't hesitate to contact our support team at <a href="mailto:support@consumptionwatch.com">support@consumptionwatch.com</a>.</p>
+                    </div>
                 </main>
             </div>
         </div>

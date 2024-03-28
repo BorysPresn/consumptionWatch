@@ -195,8 +195,8 @@ sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
 
 
 // add Record
-const addRecrdForm = document.getElementById('add-record-form');
-addRecrdForm.addEventListener('submit', async (e) => {
+const addRecordForm = document.getElementById('add-record-form');
+addRecordForm.addEventListener('submit', async (e) => {
     try {
         e.preventDefault();
         const inputIds = ['fuelVolume', 'distance', 'totalMileage', 'fuelPrice'];
@@ -209,12 +209,11 @@ addRecrdForm.addEventListener('submit', async (e) => {
         }
 
         const validationResponse = getAndValidateInputs(inputIds, userId, lastMileage);
-        console.log(validationResponse)
         if(!validationResponse.isValid){
             showError(validationResponse);
             throw new Error(validationResponse.errorMessage);
         } 
-        removeError(addRecrdForm);
+        removeError(addRecordForm);
         const response = await fetch('/addRecord', { 
             method: 'POST',
             headers: {
@@ -225,7 +224,7 @@ addRecrdForm.addEventListener('submit', async (e) => {
         const data = await response.json();
 
         insertDataToHtml(data);
-        addRecrdForm.reset();
+        addRecordForm.reset();
         
         lastMileage = data.totalMileage;
     } catch (error) {

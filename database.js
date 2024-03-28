@@ -68,7 +68,6 @@ async function getAllMileageRecords(userId) {
 async function getLastFullTankedRecord(id) {
     const db = await connectToDatabase();
     const mileageCollection = db.collection('mileage');
-    // Замените на ваш фактический запрос для получения последней записи
     return mileageCollection.findOne({userId : id, fullTank: true}, { sort: { _id: -1 } });
 }
 
@@ -76,11 +75,10 @@ async function getLastFullTankedRecord(id) {
 async function getLatestMileageRecord(id) {
   const db = await connectToDatabase();
   const mileageCollection = db.collection('mileage');
-  // Замените на ваш фактический запрос для получения последней записи
   return mileageCollection.findOne({userId : id}, { sort: { _id: -1 } });
 }
 
-//hettitng all {fullTank: false} records
+//gettitng all {fullTank: false} records
 async function getPartialTankRecords(id) {
   const db = await connectToDatabase();
   const mileageCollection = db.collection('mileage');
@@ -94,8 +92,7 @@ async function deletePartialTankRecords(id) {
     const mileageCollection = db.collection('mileage');
     return mileageCollection.deleteMany({userId: id, fullTank: false});
   } catch (error) {
-    console.error(error.message);
-    throw error;
+    throw new Error(`Error while deleting records`);
   }
 }
 //inserting a new user
