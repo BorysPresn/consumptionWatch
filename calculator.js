@@ -1,4 +1,4 @@
-const { getAllMileageRecords, getInitialMileage, getLastFullTankedRecord, getLatestMileageRecord, getPartialTankRecords, deletePartialTankRecords } = require("./database");
+import { getAllMileageRecords, getInitialMileage, getLastFullTankedRecord, getLatestMileageRecord, getPartialTankRecords, deletePartialTankRecords } from "./database";
 
 async function processData(data, id){
     try {
@@ -60,7 +60,7 @@ async function processData(data, id){
     }
 }
 
-async function updateStatistic(initialMileage, userId) {
+async function getStatistic(initialMileage, userId) {
     const allData = await getAllMileageRecords(userId);
     // const initialMileage = await getInitialMileage(userId);
     if(allData.data.length == 0){ 
@@ -69,13 +69,13 @@ async function updateStatistic(initialMileage, userId) {
             message : "There's no data for statistics yet"
         }
     }
-    const dataToReturn = getStatistic(allData.data, initialMileage);
+    const dataToReturn = calcStatistic(allData.data, initialMileage);
     console.log("returning: ", dataToReturn)
     return dataToReturn;
 }
 
-function getStatistic(data, initial) {
-    //let averDistance = 0;
+function calcStatistic(data, initial) {
+    let averDistance = 0;
     let totalFuelConsumed = 0;
     let averConsumption = 0;
     let totalmoneySpent = 0;
@@ -131,4 +131,4 @@ function checkValidity(data, record) {
     return result;
 }
 
-module.exports = { processData, updateStatistic, getStatistic };
+export default { processData, getStatistic, calcStatistic };

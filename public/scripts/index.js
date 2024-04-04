@@ -180,16 +180,20 @@ logoutButtons.forEach(element => {
 // Sidebar 
 
 let sidebarArray = document.querySelectorAll('.sidebar');
-sidebarArray.forEach(elem => elem.addEventListener('click', (e) =>{
-    const target = e.target.closest('.nav-item');
-    if(target){
-        document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
-        target.classList.add('active');
-        const action = target.dataset.target;
-        if(action === 'historyBlock') {
-            generateHistory();
+sidebarArray.forEach(elem => elem.addEventListener('click', async (e) =>{
+    try {
+        const target = e.target.closest('.nav-item');
+        if(target){
+            document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
+            target.classList.add('active');
+            const action = target.dataset.target;
+            if(action === 'historyBlock') {
+                generateHistory(await getHistory());
+            }
+            showBlock(action, contentItems)
         }
-        showBlock(action, contentItems)
+    } catch (error) {
+        console.error(error);
     }
 }));
 
@@ -233,8 +237,7 @@ addRecordForm.addEventListener('submit', async (e) => {
 })
 
 // History
-
-async function generateHistory() {
+async function getHistory() {
     try {
         const userId = getCookie('userId');
 
@@ -254,43 +257,45 @@ async function generateHistory() {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
         const history = await response.json();
-        
         console.log(history)
-        contentBlocks.historyBlock.innerHTML = '';
-        history.data.reverse();
-        history.data.forEach(elem => {
-            
-            const rowDiv = document.createElement('div');
-            rowDiv.className = "row px-1";
-            
-            const colDiv = document.createElement('div');
-            colDiv.className = "col border rounded-1 mt-2 p-2";
-            
-            colDiv.innerHTML = `<div class="row">
-                                        <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>`+
-                                        // <div class="col-1 text-end">
-                                        //     <button type="button" class="btn-close" aria-label="Close"></button>
-                                        // </div>
-                                    `</div>
-                                    <hr>
-                                    <div class="row ps-2 ps-sm-0">
-                                        <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
-                                        <div class="col-12 col-sm-6 text-left"><b>Distance : </b>${elem.distance} km</div>
-                                        <div class="col-12 col-sm-6 text-left"><b>Fueled : </b>${elem.fuelVolume} L</div>
-                                        <div class="col-12 col-sm-6 text-left"><b>Fuel price : </b>${elem.fuelPrice} Zł/L</div>
-                                        <div class="col-12 col-sm-6 text-left"><b>Fuel cost : </b>${elem.moneySpent} Zł</div>
-                                        <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
-                                </div>`;
-            rowDiv.appendChild(colDiv);
-            if(elem.fullTank === false){
-                let redBlock = document.createElement('div');
-                redBlock.className = "text-danger fw-bold";
-                redBlock.textContent = 'underfueled';
-                colDiv.prepend(redBlock);
-            }
-            contentBlocks.historyBlock.appendChild(rowDiv);
-        });
+        return history;
     } catch (error) {
-        console.error('Error while generating history', error);
+        console.error(error)
     }
+}
+function generateHistory(history) {
+    contentBlocks.historyBlock.innerHTML = '';
+    history.data.reverse();
+    history.data.forEach(elem => {
+        
+        const rowDiv = document.createElement('div');
+        rowDiv.className = "row px-1";
+        
+        const colDiv = document.createElement('div');
+        colDiv.className = "col border rounded-1 mt-2 p-2";
+        
+        colDiv.innerHTML = `<div class="row">
+                                    <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>`+
+                                    // <div class="col-1 text-end">
+                                    //     <button type="button" class="btn-close" aria-label="Close"></button>
+                                    // </div>
+                                `</div>
+                                <hr>
+                                <div class="row ps-2 ps-sm-0">
+                                    <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Distance : </b>${elem.distance} km</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Fueled : </b>${elem.fuelVolume} L</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Fuel price : </b>${elem.fuelPrice} Zł/L</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Fuel cost : </b>${elem.moneySpent} Zł</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
+                            </div>`;
+        rowDiv.appendChild(colDiv);
+        if(elem.fullTank === false){
+            let redBlock = document.createElement('div');
+            redBlock.className = "text-danger fw-bold";
+            redBlock.textContent = 'underfueled';
+            colDiv.prepend(redBlock);
+        }
+        contentBlocks.historyBlock.appendChild(rowDiv);
+    });
 };

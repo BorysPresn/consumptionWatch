@@ -6,7 +6,7 @@ app.use(express.json());
 app.use(express.static('public'));
 
 
-const { 
+const {
   client,
   insertMileageRecord, 
   getAllMileageRecords, 
@@ -16,7 +16,7 @@ const {
   insertNewUser,
   checkUser
 } = require('./database');
-const { processData, updateStatistic, getStatistic } = require('./calculator');
+const { processData, updateStatistic, getStatistic } = require('./calculator').default;
 
 // Endpoint for adding new record
 
@@ -43,8 +43,6 @@ app.post('/addRecord', async (req, res) => {
   }
 });
   
-
-
 //Endpoint for Register
 app.post('/register', async (req, res) => {
   try {
@@ -103,7 +101,6 @@ app.get('/lastRecord', async (req, res) => {
 })
 
 // getting initial mileage
-
 app.get('/users', async (req, res)=> {
   try {
     const userId = req.query.userId;
@@ -120,8 +117,22 @@ app.get('/users', async (req, res)=> {
 });
 
 // Endpoint for getting all records
-
 app.get('/history', async (req, res) => {
+  const userId = req.query.userId;
+  try {
+    const records = await getAllMileageRecords(userId);
+    if (!records.success){
+      res.status(400).json({ records });
+    }
+    res.status(200).json(records);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+//endpoint for generating statistic
+app.get('./statistic', async (req, res) => {
   const userId = req.query.userId;
   try {
     const records = await getAllMileageRecords(userId);
