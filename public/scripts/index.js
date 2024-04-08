@@ -190,6 +190,7 @@ sidebarArray.forEach(elem => elem.addEventListener('click', async (e) =>{
             if(action === 'historyBlock') {
                 generateHistory(await getHistory());
             }
+            
             showBlock(action, contentItems)
         }
     } catch (error) {
@@ -197,13 +198,13 @@ sidebarArray.forEach(elem => elem.addEventListener('click', async (e) =>{
     }
 }));
 
-
 // add Record
 const addRecordForm = document.getElementById('add-record-form');
 addRecordForm.addEventListener('submit', async (e) => {
     try {
         e.preventDefault();
         const inputIds = ['fuelVolume', 'distance', 'totalMileage', 'fuelPrice'];
+        
         const userId = getCookie('userId');
         
         if(!userId){
@@ -301,7 +302,20 @@ function generateHistory(history) {
 };
 
 // Statistic
+document.getElementById('statisticButton').addEventListener('click', getStatistic);
+async function getStatistic() {
+    try {
+        const userId = getCookie('userId');
 
-// async function generateStatistic() {
+        if(!userId){
+            console.log('no userId');
+            showBlock('loginBlock', authItems);
+            return;
+        }
 
-// }
+        const period = document.getElementById('selectQuantity').value * document.getElementById('selectPeriod').value;
+        console.log(period)
+    } catch (error) {
+        console.error(error)
+    }
+}
