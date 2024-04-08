@@ -299,3 +299,9 @@ function generateHistory(history) {
         contentBlocks.historyBlock.appendChild(rowDiv);
     });
 };
+
+// Statistic
+
+// async function generateStatistic() {
+
+// }

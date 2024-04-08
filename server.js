@@ -16,7 +16,7 @@ const {
   insertNewUser,
   checkUser
 } = require('./database');
-const { processData, updateStatistic, getStatistic } = require('./calculator').default;
+const { processData, updateStatistic, getStatistic } = require('./calculator.js');
 
 // Endpoint for adding new record
 

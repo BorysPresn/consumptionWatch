@@ -1,4 +1,10 @@
-import { getAllMileageRecords, getInitialMileage, getLastFullTankedRecord, getLatestMileageRecord, getPartialTankRecords, deletePartialTankRecords } from "./database";
+const { 
+    getAllMileageRecords, 
+    getInitialMileage, 
+    getLastFullTankedRecord, 
+    getLatestMileageRecord, 
+    getPartialTankRecords, 
+    deletePartialTankRecords } = require("./database");
 
 async function processData(data, id){
     try {
@@ -131,4 +137,4 @@ function checkValidity(data, record) {
     return result;
 }
 
-export default { processData, getStatistic, calcStatistic };
+module.exports =  { processData, getStatistic, calcStatistic };
