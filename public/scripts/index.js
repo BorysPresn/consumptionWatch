@@ -203,7 +203,7 @@ const addRecordForm = document.getElementById('add-record-form');
 addRecordForm.addEventListener('submit', async (e) => {
     try {
         e.preventDefault();
-        const inputIds = ['fuelVolume', 'distance', 'totalMileage', 'fuelPrice'];
+        const inputIds = ['fuelVolume',  'totalMileage', 'fuelPrice']; //'distance',
         const userId = getCookie('userId');
         
         if(!userId){
@@ -211,7 +211,7 @@ addRecordForm.addEventListener('submit', async (e) => {
             showBlock('loginBlock', authItems);
             return;
         }
-
+        removeError();
         const validatedData = getAndValidateInputs(inputIds, userId, lastMileage);
         if(!validatedData.isValid){
             showError(validatedData);

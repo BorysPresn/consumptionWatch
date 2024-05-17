@@ -15,6 +15,8 @@ async function processData(data, id){
         if(!recordToUSe){
             throw new Error(`Error while getting recordToUse`);
         }
+        console.log('recordToUse',recordToUSe);
+        console.log('dataToProcess', dataToProcess);
         const validationResult = checkValidity(dataToProcess, recordToUSe);
         
         if(!validationResult.success) {
@@ -129,7 +131,8 @@ function checkValidity(data, record) {
     }
     delete newData.userId;
     delete newData.fullTank;
-
+    delete newData.processed;
+    
     for(let key in newData){
         let value = newData[key];
         if(!value || Number.isNaN(value) || value <= 0){

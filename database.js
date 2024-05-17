@@ -85,19 +85,19 @@ async function getPartialTankRecords(id) {
   return mileageCollection.find({ userId: id, fullTank: false, processed: false }).toArray();
 }
 
-//deleting all {fullTank:false} records (after fueling a full tank we don't need them)
+//updating all {fullTank:false} 
 async function updateRecords(records) {
   try {
     const db = await connectToDatabase();
     const mileageCollection = db.collection('mileage');
     for(const record of records){
-      mileageCollection.updateOne(
+      await mileageCollection.updateOne(
         {_id: record._id},
         {$set:{processed: true, processedAt: new Date().toISOString() }}
       )
     };
   } catch (error) {
-    throw new Error(`Error while updating records`);
+    throw new Error(`Error while updating records: ${error.message}`);
   }
 }
 //inserting a new user
