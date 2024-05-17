@@ -56,33 +56,49 @@ async function insertMileageRecord(record) {
 }
 
 async function getAllMileageRecords(userId) {
+  try {
     const db = await connectToDatabase();
     const mileageCollection = await db.collection('mileage').find({ userId : userId }).toArray();
     if (!mileageCollection) {
       return { success : false, message : "User not found" };
     }
     return {success : true, message : "succes", data : mileageCollection}
+  } catch (error) {
+      console.error('Error while getting all records');
+  }
 }
 
 // Last Full tanked record
 async function getLastFullTankedRecord(id) {
+  try {
     const db = await connectToDatabase();
     const mileageCollection = db.collection('mileage');
     return mileageCollection.findOne({userId : id, fullTank: true}, { sort: { _id: -1 } });
+  } catch (error) {
+    console.error('Error while getting last fulltanked record')
+  }
 }
 
 //latest record
 async function getLatestMileageRecord(id) {
-  const db = await connectToDatabase();
-  const mileageCollection = db.collection('mileage');
-  return mileageCollection.findOne({userId : id}, { sort: { _id: -1 } });
+  try {
+    const db = await connectToDatabase();
+    const mileageCollection = db.collection('mileage');
+    return mileageCollection.findOne({userId : id}, { sort: { _id: -1 } });
+  } catch (error) {
+    console.error('Error while getting last record');
+  }
 }
 
 //gettitng all {fullTank: false} records
 async function getPartialTankRecords(id) {
-  const db = await connectToDatabase();
-  const mileageCollection = db.collection('mileage');
-  return mileageCollection.find({ userId: id, fullTank: false, processed: false }).toArray();
+  try {
+    const db = await connectToDatabase();
+    const mileageCollection = db.collection('mileage');
+    return mileageCollection.find({ userId: id, fullTank: false, processed: false }).toArray();
+  } catch (error) {
+    console.error('Error while gettitng records');
+  }
 }
 
 //updating all {fullTank:false} 

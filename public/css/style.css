@@ -115,3 +115,15 @@ option:hover {
 /* .history-select option {
     padding: 5px;
 } */
+.accordion-bg{
+    background-color: #d3d3d365;
+}
+.accordion-button::after {
+    margin: 0 auto;
+}
+.accordion-button:focus, .accordion-button:not(.collapsed){
+    background-color: #d3d3d365;
+    box-shadow: none;
+    border-color: inherit;
+    color: inherit;
+}

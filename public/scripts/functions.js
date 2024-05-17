@@ -106,6 +106,8 @@ export function insertDataToHtml(data) {
 }
 
 export function showBlock(blockName, blockArray) {
+    
+
     let blockToShow = null;
     blockArray.forEach(elem => {
         if(elem.id === blockName) {

@@ -182,6 +182,11 @@ logoutButtons.forEach(element => {
 let sidebarArray = document.querySelectorAll('.sidebar');
 sidebarArray.forEach(elem => elem.addEventListener('click', async (e) =>{
     try {
+        const cookie = getCookie('token');
+        if(!cookie) {
+            showBlock("loginBlock", authItems);
+            return;
+        }
         const target = e.target.closest('.nav-item');
         if(target){
             document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
@@ -263,43 +268,101 @@ async function getHistory() {
         console.error(error)
     }
 }
+// <div class="col-1 text-end">
+//     <button type="button" class="btn-close" aria-label="Close"></button>
+// </div>
 function generateHistory(history) {
     contentBlocks.historyBlock.innerHTML = '';
     history.data.reverse();
-    history.data.forEach(elem => {
-        
+    
+    for (let i = 0; i < history.data.length; i++){
+        const elem = history.data[i];
+        const innerHTMLText = `<div class="row">
+                            <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>
+                        </div>
+                        <hr>
+                        <div class="row ps-2 ps-sm-0">
+                            <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
+                            <div class="col-12 col-sm-6 text-left"><b>Distance : </b>${elem.distance} km</div>
+                            <div class="col-12 col-sm-6 text-left"><b>Fueled : </b>${elem.fuelVolume} L</div>
+                            <div class="col-12 col-sm-6 text-left"><b>Fuel price : </b>${elem.fuelPrice} Zł/L</div>
+                            <div class="col-12 col-sm-6 text-left"><b>Fuel cost : </b>${elem.moneySpent} Zł</div>
+                            <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
+                        </div>`;
         const rowDiv = document.createElement('div');
         rowDiv.className = "row px-1";
         
         const colDiv = document.createElement('div');
         colDiv.className = "col border rounded-1 mt-2 p-2";
-        
-        colDiv.innerHTML = `<div class="row">
-                                    <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>`+
-                                    // <div class="col-1 text-end">
-                                    //     <button type="button" class="btn-close" aria-label="Close"></button>
-                                    // </div>
-                                `</div>
-                                <hr>
-                                <div class="row ps-2 ps-sm-0">
-                                    <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Distance : </b>${elem.distance} km</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Fueled : </b>${elem.fuelVolume} L</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Fuel price : </b>${elem.fuelPrice} Zł/L</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Fuel cost : </b>${elem.moneySpent} Zł</div>
-                                    <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
-                            </div>`;
+        colDiv.innerHTML = innerHTMLText;
         rowDiv.appendChild(colDiv);
-        if(elem.fullTank === false){
-            let redBlock = document.createElement('div');
-            redBlock.className = "text-danger fw-bold";
-            redBlock.textContent = 'underfueled';
-            colDiv.prepend(redBlock);
-        }
-        contentBlocks.historyBlock.appendChild(rowDiv);
-    });
-};
 
+        if (history.data[i].fullTank === true && (i < history.data.length -1) && history.data[i+1].fullTank === false ) {
+            //create accordion
+            console.log('accordion');
+            const accordion = document.createElement('div');
+            accordion.className = 'accordion';
+            accordion.setAttribute('id', `accordion${i}`);
+            const accordionItem = document.createElement('div');
+            accordionItem.className = "accordion-item";
+            const accordionButton = document.createElement('button');
+            accordionButton.className = "accordion-button collapsed accordion-bg";
+            
+            accordionButton.setAttribute('type',"button");
+            accordionButton.setAttribute("data-bs-toggle", "collapse");
+            accordionButton.setAttribute("data-bs-target", `#collapse${i}`);
+            accordionButton.setAttribute("aria-expanded", "false");
+            accordionButton.setAttribute("aria-controls", `collapse${i}`);
+
+            const accordionTarget = document.createElement('div');
+            accordionTarget.className = "accordion-collapse collapse";
+            accordionTarget.setAttribute('id', `collapse${i}`);
+            accordionTarget.setAttribute("data-bs-parent", `#accordion${i}`)
+
+            const accordionBody = document.createElement('div');
+            accordionBody.className = "accordion-body accordion-bg";
+
+            while (i + 1 < history.data.length && history.data[i + 1].fullTank === false){
+                i++;
+                const elem = history.data[i];
+                accordionBody.innerHTML += `<div class="col border rounded-1 mt-2 p-2 bg-white">
+                                                <div class="text-danger fw-bold"> underfueled </div>
+                                                <div class="row">
+                                                    <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>
+                                                </div>
+                                                <hr>
+                                                <div class="row ps-2 ps-sm-0">
+                                                    <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
+                                                    <div class="col-12 col-sm-6 text-left"><b>Distance : </b>${elem.distance} km</div>
+                                                    <div class="col-12 col-sm-6 text-left"><b>Fueled : </b>${elem.fuelVolume} L</div>
+                                                    <div class="col-12 col-sm-6 text-left"><b>Fuel price : </b>${elem.fuelPrice} Zł/L</div>
+                                                    <div class="col-12 col-sm-6 text-left"><b>Fuel cost : </b>${elem.moneySpent} Zł</div>
+                                                    <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
+                                                </div>
+                                            </div>`;
+                
+            }
+            accordionTarget.appendChild(accordionBody);
+            accordionItem.appendChild(accordionButton);
+            accordionItem.appendChild(accordionTarget);
+            accordion.appendChild(accordionItem);
+            colDiv.appendChild(accordion);
+        }
+        
+        rowDiv.appendChild(colDiv);
+        contentBlocks.historyBlock.appendChild(rowDiv);
+    }
+
+    
+    // if(elem.fullTank === false){
+    //     let redBlock = document.createElement('div');
+    //     redBlock.className = "text-danger fw-bold";
+    //     redBlock.textContent = 'underfueled';
+    //     colDiv.prepend(redBlock);
+    // }
+    
+  
+}
 // Statistic
 // document.getElementById('statisticButton').addEventListener('click', getStatistic);
 async function getStatistic() {
