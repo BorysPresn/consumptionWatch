@@ -8,57 +8,62 @@ export function getCookie(name) {
 }
 
 export function getAndValidateInputs(ids, id, lastMileage){
-    const response = {
+    const result = {
         isValid: true,
         errorMessage: '',
         inputElem: null,
         formData: {}
     }
+    //getting data from form inputs
     for (let id of ids){
         let input = document.getElementById(id)
         let value = parseFloat(input.value.replace(',', '.'));
-        response.formData[id] = value;
-        if((id == 'totalMileage'||id == 'distance') && !response.formData[id]) {
-            response.formData[id] = null;
+        result.formData[id] = value;
+        if((id == 'totalMileage'||id == 'distance') && !result.formData[id]) {
+            result.formData[id] = null;
         }
     }
+    //checking on isNaN & calculate
     for(let id of ids){
-        response.inputElem = document.getElementById(id)
-        if(response.formData[id] == null){
-            response.formData[id] = calculateData(id, response.formData, lastMileage);
+        result.inputElem = document.getElementById(id)
+        if(result.formData[id] == null){
+            result.formData[id] = calculateData(id, result.formData, lastMileage);
         }
-        let value = response.formData[id];
+        let value = result.formData[id];
         if(id == 'totalMileage' && value != 0 && value <= lastMileage){
-            response.errorMessage = "Mileage can`t be less or equal to the last mileage";
-            response.isValid = false;
-            return response;
+            result.errorMessage = "Mileage can`t be less or equal to the last mileage";
+            result.isValid = false;
+            return result;
         } else if(Number.isNaN(value) || value <= 0){
-            response.errorMessage = "Only positive numbers are allowed";
-            response.isValid = false;
-            return response;
+            result.errorMessage = "Only positive numbers are allowed";
+            result.isValid = false;
+            return result;
         } else {
-            response.errorMessage = '';
-            response.formData[id] = value;
+            result.errorMessage = '';
+            result.formData[id] = value;
         }
     }
-    
-    if(response.formData.totalMileage - response.formData.distance != lastMileage){
-        response.inputElem = getElements(['distance', 'totalMileage', 'totalMileageValue']);
-        response.errorMessage = "Check inputed values in distance and total mileage. They does not match";
-        response.isValid = false;
-        return response;
+    console.log(Math.abs(result.formData.totalMileage - result.formData.distance - lastMileage))
+    if(Math.abs(result.formData.totalMileage - result.formData.distance - lastMileage) > 1){
+        result.inputElem = getElements(['distance', 'totalMileage', 'totalMileageValue']);
+        result.errorMessage = "Check inputed values in distance and total mileage. They does not match";
+        result.isValid = false;
+        return result;
     }
     const fuelStatus = document.querySelector('[name="fuelTankStatus"]:checked');
     if(fuelStatus === null){
-        response.inputElem = document.querySelectorAll('.fuel-status-label');
-        response.errorMessage = "Please choose one of these options";
-        response.isValid = false;
-        return response;
+        result.inputElem = document.querySelectorAll('.fuel-status-label');
+        result.errorMessage = "Please choose one of these options";
+        result.isValid = false;
+        return result;
     }
-    response.formData.fullTank = Boolean(fuelStatus.value);
-    response.formData.userId = id;
-    console.log(response.formData)
-    return response;
+    result.formData.fullTank = Boolean(fuelStatus.value);
+    if (result.formData.fullTank === false){
+        result.formData.processed = false;
+    }
+    result.formData.userId = id;
+    console.log(result.formData)
+    return result;
 }
 
 function calculateData(key, data, lastMileage) {
@@ -71,18 +76,16 @@ function calculateData(key, data, lastMileage) {
     }
 }
 
-function getElements(){
-    if(arguments.length === 1){
-        return document.querySelectorAll(arguments[0]);
-    }
-    const result =[];
-    Array.from(arguments.forEach(elem => {
-            const element = document.getElementById(elem);
-            if(element){
-                result.push(element)
-            }
-        })
-    );
+function getElements(arrayOfIds){
+    const result = [];
+    console.log(arrayOfIds)
+    arrayOfIds.forEach(elem => {
+        const element = document.getElementById(elem);
+        if(element){
+            result.push(element)
+        }
+    });
+    console.log('result\n', result)
     return result;
 }
 
@@ -121,15 +124,16 @@ export function clearBlocks(){
 }
 
 export function showError(obj) {
-     if (obj.inputElem && obj.inputElem.length > 0) {
+    console.log(obj)
+    const inputElems = Array.from(obj.inputElem);
+    console.log(inputElems)
+    if (obj.inputElem && obj.inputElem.length > 0) {
         obj.inputElem.forEach(elem => elem.classList.add('error'));
-    } else if (obj.inputElem) {
-        obj.inputElem.classList.add('error');
     }
     document.getElementById('error-message').textContent = obj.errorMessage;
 }
 
-export function removeError(form) {
+export function removeError() {
     document.getElementById('error-message').textContent = '';
-    form.querySelectorAll('.error').forEach(elem => elem.classList.remove('error'));
+    document.getElementById('addRecordBlock').querySelectorAll('.error').forEach(elem => elem.classList.remove('error'));
 }

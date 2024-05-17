@@ -82,17 +82,22 @@ async function getLatestMileageRecord(id) {
 async function getPartialTankRecords(id) {
   const db = await connectToDatabase();
   const mileageCollection = db.collection('mileage');
-  return mileageCollection.find({ userId: id, fullTank: false }).toArray();
+  return mileageCollection.find({ userId: id, fullTank: false, processed: false }).toArray();
 }
 
 //deleting all {fullTank:false} records (after fueling a full tank we don't need them)
-async function deletePartialTankRecords(id) {
+async function updateRecords(records) {
   try {
     const db = await connectToDatabase();
     const mileageCollection = db.collection('mileage');
-    return mileageCollection.deleteMany({userId: id, fullTank: false});
+    for(const record of records){
+      mileageCollection.updateOne(
+        {_id: record._id},
+        {$set:{processed: true, processedAt: new Date().toISOString() }}
+      )
+    };
   } catch (error) {
-    throw new Error(`Error while deleting records`);
+    throw new Error(`Error while updating records`);
   }
 }
 //inserting a new user
@@ -182,7 +187,6 @@ async function getInitialMileage(id) {
 }
 
 
-
 module.exports = {
   client, 
   connectToDatabase, 
@@ -191,7 +195,7 @@ module.exports = {
   getLastFullTankedRecord,
   getLatestMileageRecord,
   getPartialTankRecords, 
-  deletePartialTankRecords, 
+  updateRecords, 
   getInitialMileage,
   insertNewUser,
   checkUser

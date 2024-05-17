@@ -204,7 +204,6 @@ addRecordForm.addEventListener('submit', async (e) => {
     try {
         e.preventDefault();
         const inputIds = ['fuelVolume', 'distance', 'totalMileage', 'fuelPrice'];
-        
         const userId = getCookie('userId');
         
         if(!userId){
@@ -213,18 +212,18 @@ addRecordForm.addEventListener('submit', async (e) => {
             return;
         }
 
-        const validationResponse = getAndValidateInputs(inputIds, userId, lastMileage);
-        if(!validationResponse.isValid){
-            showError(validationResponse);
-            throw new Error(validationResponse.errorMessage);
+        const validatedData = getAndValidateInputs(inputIds, userId, lastMileage);
+        if(!validatedData.isValid){
+            showError(validatedData);
+            throw new Error(validatedData.errorMessage);
         } 
-        removeError(addRecordForm);
+        removeError();
         const response = await fetch('/addRecord', { 
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(validationResponse.formData),
+            body: JSON.stringify(validatedData.formData),
         });
         const data = await response.json();
 
@@ -302,7 +301,7 @@ function generateHistory(history) {
 };
 
 // Statistic
-document.getElementById('statisticButton').addEventListener('click', getStatistic);
+// document.getElementById('statisticButton').addEventListener('click', getStatistic);
 async function getStatistic() {
     try {
         const userId = getCookie('userId');

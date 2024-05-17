@@ -4,12 +4,12 @@ const {
     getLastFullTankedRecord, 
     getLatestMileageRecord, 
     getPartialTankRecords, 
-    deletePartialTankRecords } = require("./database");
+    updateRecords } = require("./database");
 
 async function processData(data, id){
     try {
         const dataToProcess = {...data};
-        let calcPartialTankRecords = {};
+        let preResult = {};
         const lastRecord = await getLatestMileageRecord(id);
         const recordToUSe = lastRecord ? lastRecord.totalMileage : await getInitialMileage(data.userId);
         if(!recordToUSe){
@@ -26,36 +26,45 @@ async function processData(data, id){
         const fuelConsumption = fuelVolume / distance * 100;
         const moneySpent = fuelVolume * fuelPrice;
         dataToProcess.moneySpent = moneySpent;
-        //if tanked full tank - check all records in DB for fullTank : false, process and finaly delete them
+        //if tanked full tank - check all records in DB for fullTank : false, process them
         if(data.fullTank){
             const partialTankRecords = await getPartialTankRecords(id);
             if(!partialTankRecords){
                 throw new Error(`Error while getting partialTankRecords`);
             }
             partialTankRecords.push(dataToProcess);
-            calcPartialTankRecords = partialTankRecords.reduce((accumulator, record) => {
+            console.log('partialrecords\n', partialTankRecords);
+            preResult = partialTankRecords.reduce((accumulator, record) => {
                 accumulator.distance += record.distance;
                 accumulator.fuelVolume += record.fuelVolume;
                 accumulator.moneySpent += record.moneySpent;
 
+                console.log('accum: \n',record, '\n', accumulator);
                 return accumulator;
             }, {
                 distance: 0,
                 fuelVolume: 0,
                 moneySpent: 0
             }) ;
-            calcPartialTankRecords.fuelPrice = cutToTwoDecimals(calcPartialTankRecords.moneySpent / calcPartialTankRecords.fuelVolume);
-            data = { ...dataToProcess, ...calcPartialTankRecords};
-            await deletePartialTankRecords(id)
+            await updateRecords(partialTankRecords);
+            console.log('Records updated');
+            preResult.fuelVolume = parseFloat(preResult.fuelVolume.toFixed(2));
+            preResult.moneySpent = parseFloat(preResult.moneySpent.toFixed(2));
+            preResult.fuelConsumption = parseFloat((preResult.fuelVolume / preResult.distance * 100).toFixed(2));
+            console.log('partial tank records summary\n', preResult );
+
+            preResult.fuelPrice = cutToTwoDecimals(preResult.moneySpent / preResult.fuelVolume);
+            data = { ...dataToProcess, ...preResult};
+            console.log('data = \n', data);
+            
         }
 
         let result = {
             date : now.toLocaleDateString("ru-RU"),
             time : now.toLocaleTimeString({ hour12 : false }),
-            
-            ...data,
             fuelConsumption : cutToTwoDecimals(fuelConsumption),
-            moneySpent : cutToTwoDecimals(moneySpent)
+            moneySpent : cutToTwoDecimals(moneySpent),
+            ...data            
         };
        
         return result;
