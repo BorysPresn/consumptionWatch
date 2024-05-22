@@ -108,8 +108,14 @@ async function updateRecords(records) {
     const mileageCollection = db.collection('mileage');
     for(const record of records){
       await mileageCollection.updateOne(
-        {_id: record._id},
-        {$set:{processed: true, processedAt: new Date().toISOString() }}
+        { _id: record._id },
+        { 
+          $set: {
+            processed: record.processed, 
+            processedAt: record.processedAt, 
+            summaryId: record.summaryId 
+          }
+        }
       )
     };
   } catch (error) {

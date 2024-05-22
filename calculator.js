@@ -9,7 +9,7 @@ const {
 async function processData(data, id){
     try {
         const dataToProcess = {...data};
-        let preResult = {};
+        let summary = {};
         const lastRecord = await getLatestMileageRecord(id);
         const recordToUSe = lastRecord ? lastRecord.totalMileage : await getInitialMileage(data.userId);
         if(!recordToUSe){
@@ -23,53 +23,64 @@ async function processData(data, id){
             throw new Error(`Error! validation failed : ${validationResult.message}`);
         }
         
-        const { distance, fuelVolume, fuelPrice } = data;
+        //calculate and add 
+        const { distance, fuelVolume, fuelPrice } = dataToProcess;
         const now = new Date();
         const fuelConsumption = fuelVolume / distance * 100;
         const moneySpent = fuelVolume * fuelPrice;
-        dataToProcess.moneySpent = moneySpent;
-        //if tanked full tank - check all records in DB for fullTank : false, process them
-        if(data.fullTank){
+        dataToProcess.fuelConsumption = cutToTwoDecimals(fuelConsumption);
+        dataToProcess.moneySpent = cutToTwoDecimals(moneySpent);
+        dataToProcess.date = now.toLocaleDateString("ru-RU");
+        dataToProcess.time = now.toLocaleTimeString({ hour12 : false });
+
+        //if tanked full tank - check all records in DB for fullTank : false, process them for SUMMARY
+        if(dataToProcess.fullTank){
+            //gettinfg summary of partial tank records and this FULL tank record
             const partialTankRecords = await getPartialTankRecords(id);
             if(!partialTankRecords){
                 throw new Error(`Error while getting partialTankRecords`);
             }
+            // console.log('partial wihtout last record', partialTankRecords);
             partialTankRecords.push(dataToProcess);
-            console.log('partialrecords\n', partialTankRecords);
-            preResult = partialTankRecords.reduce((accumulator, record) => {
+            // console.log('partialrecords\n', partialTankRecords);
+            summary = partialTankRecords.reduce((accumulator, record) => {
                 accumulator.distance += record.distance;
                 accumulator.fuelVolume += record.fuelVolume;
                 accumulator.moneySpent += record.moneySpent;
-
-                console.log('accum: \n',record, '\n', accumulator);
                 return accumulator;
             }, {
                 distance: 0,
                 fuelVolume: 0,
                 moneySpent: 0
             }) ;
-            await updateRecords(partialTankRecords);
-            console.log('Records updated');
-            preResult.fuelVolume = parseFloat(preResult.fuelVolume.toFixed(2));
-            preResult.moneySpent = parseFloat(preResult.moneySpent.toFixed(2));
-            preResult.fuelConsumption = parseFloat((preResult.fuelVolume / preResult.distance * 100).toFixed(2));
-            console.log('partial tank records summary\n', preResult );
-
-            preResult.fuelPrice = cutToTwoDecimals(preResult.moneySpent / preResult.fuelVolume);
-            data = { ...dataToProcess, ...preResult};
-            console.log('data = \n', data);
+           
             
-        }
+            summary.fuelVolume = parseFloat(summary.fuelVolume.toFixed(2));
+            summary.moneySpent = parseFloat(summary.moneySpent.toFixed(2));
+            summary.fuelConsumption = parseFloat((summary.fuelVolume / summary.distance * 100).toFixed(2));
+            // console.log('partial tank records summary\n', summary );
 
-        let result = {
-            date : now.toLocaleDateString("ru-RU"),
-            time : now.toLocaleTimeString({ hour12 : false }),
-            fuelConsumption : cutToTwoDecimals(fuelConsumption),
-            moneySpent : cutToTwoDecimals(moneySpent),
-            ...data            
-        };
+            summary.fuelPrice = cutToTwoDecimals(summary.moneySpent / summary.fuelVolume);
+
+            // console.log('data = \n', data);
+
+            summary.date = now.toLocaleDateString("ru-RU");
+            summary.time = now.toLocaleTimeString({ hour12 : false });
+            summary.isSummary = true;
+            const summaryId = generateId();
+            summary.summaryId = summaryId;
+
+            //add unique ID to records
+            partialTankRecords.forEach(elem => { 
+                elem.summaryId = summaryId;
+                elem.processed = true;
+                elem.processedAt = now.toISOString();
+             });
+            // await updateRecords(partialTankRecords);
+            console.log('Records updated\n', partialTankRecords);
+        }
        
-        return result;
+        return { dataToProcess, summary };
     
     } catch (error) {
         console.error(error);
@@ -147,6 +158,9 @@ function checkValidity(data, record) {
     }
    
     return result;
+}
+function generateId () {
+    return new Date().getTime().toString();
 }
 
 module.exports =  { processData, getStatistic, calcStatistic };

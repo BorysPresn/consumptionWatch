@@ -19,16 +19,12 @@ export function getAndValidateInputs(ids, id, lastMileage){
         let input = document.getElementById(id)
         let value = parseFloat(input.value.replace(',', '.'));
         result.formData[id] = value;
-        // if((id == 'totalMileage'||id == 'distance') && !result.formData[id]) {
-        //     result.formData[id] = null;
-        // }
+        
     }
     //checking on isNaN & calculate
     for(let id of ids){
         result.inputElem = document.getElementById(id)
-        // if(result.formData[id] == null){
-        //     result.formData[id] = calculateData(id, result.formData, lastMileage);
-        // }
+        
         let value = result.formData[id];
         if(id == 'totalMileage' && value != 0 && value <= lastMileage){
             result.errorMessage = "Mileage can`t be less or equal to the last mileage";
@@ -43,13 +39,7 @@ export function getAndValidateInputs(ids, id, lastMileage){
             result.formData[id] = value;
         }
     }
-    // console.log(Math.abs(result.formData.totalMileage - result.formData.distance - lastMileage))
-    // if(Math.abs(result.formData.totalMileage - result.formData.distance - lastMileage) > 1){
-    //     result.inputElem = getElements(['distance', 'totalMileage', 'totalMileageValue']);
-    //     result.errorMessage = "Check inputed values in distance and total mileage. They does not match";
-    //     result.isValid = false;
-    //     return result;
-    // }
+    
     result.formData.distance = parseFloat((result.formData.totalMileage - lastMileage).toFixed(2));
     const fuelStatus = document.querySelector('[name="fuelTankStatus"]:checked');
     if(fuelStatus === null){
@@ -67,15 +57,6 @@ export function getAndValidateInputs(ids, id, lastMileage){
     return result;
 }
 
-// function calculateData(key, data, lastMileage) {
-  
-//     if(key === 'totalMileage') {
-//         return parseFloat((lastMileage + data.distance).toFixed(2));
-//     }
-//     if(key === 'distance') {
-//         return parseFloat((data.totalMileage - lastMileage).toFixed(2));
-//     }
-// }
 
 // function getElements(arrayOfIds){
 //     const result = [];

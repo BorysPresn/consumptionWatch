@@ -222,7 +222,7 @@ addRecordForm.addEventListener('submit', async (e) => {
             showError(validatedData);
             throw new Error(validatedData.errorMessage);
         } 
-        removeError();
+        //removeError();
         const response = await fetch('/addRecord', { 
             method: 'POST',
             headers: {
@@ -340,7 +340,6 @@ function generateHistory(history) {
                                                     <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
                                                 </div>
                                             </div>`;
-                
             }
             accordionTarget.appendChild(accordionBody);
             accordionItem.appendChild(accordionButton);
@@ -351,17 +350,13 @@ function generateHistory(history) {
         
         rowDiv.appendChild(colDiv);
         contentBlocks.historyBlock.appendChild(rowDiv);
+        if(elem.fullTank === false) {
+            let redBlock = document.createElement('div');
+            redBlock.className = "text-danger fw-bold";
+            redBlock.textContent = 'underfueled';
+            colDiv.prepend(redBlock);
+        }
     }
-
-    
-    // if(elem.fullTank === false){
-    //     let redBlock = document.createElement('div');
-    //     redBlock.className = "text-danger fw-bold";
-    //     redBlock.textContent = 'underfueled';
-    //     colDiv.prepend(redBlock);
-    // }
-    
-  
 }
 // Statistic
 // document.getElementById('statisticButton').addEventListener('click', getStatistic);

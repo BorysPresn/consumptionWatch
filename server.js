@@ -29,11 +29,17 @@ app.post('/addRecord', async (req, res) => {
       res.status(500).json({ error : 'Error while data validating' });
       return;
     }
-    console.log('processed data = ' + JSON.stringify(processedData))
-    const insert = await insertMileageRecord(processedData);
-    if(!insert.success){
-      throw new Error('Record inserting failed');
-    }
+    console.log('processed data = ' + processedData)
+    Object.keys(processedData).forEach( key => {
+      if(processedData[key]) {
+        // const insert = await insertMileageRecord(processedData);
+        // if(!insert.success){
+        //   throw new Error('Record inserting failed');
+        // }
+        console.log('elem', processedData[key]);
+      }
+    });
+    
     
     delete processedData.userId;
     delete processedData._id;

@@ -118,6 +118,13 @@ option:hover {
 .accordion-bg{
     background-color: #d3d3d365;
 }
+.accordion-item {
+    margin-top: 0.5em;
+
+}
+.accordion-button {
+    padding: 0;
+}
 .accordion-button::after {
     margin: 0 auto;
 }
