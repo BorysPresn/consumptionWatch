@@ -58,7 +58,7 @@ async function insertMileageRecord(record) {
 async function getAllMileageRecords(userId) {
   try {
     const db = await connectToDatabase();
-    const mileageCollection = await db.collection('mileage').find({ userId : userId }).toArray();
+    const mileageCollection = await db.collection('mileage').find({ userId : userId }).sort({_id: -1}).toArray();
     if (!mileageCollection) {
       return { success : false, message : "User not found" };
     }

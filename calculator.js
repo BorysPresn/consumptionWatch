@@ -40,44 +40,48 @@ async function processData(data, id){
             if(!partialTankRecords){
                 throw new Error(`Error while getting partialTankRecords`);
             }
-            // console.log('partial wihtout last record', partialTankRecords);
-            partialTankRecords.push(dataToProcess);
-            // console.log('partialrecords\n', partialTankRecords);
-            summary = partialTankRecords.reduce((accumulator, record) => {
-                accumulator.distance += record.distance;
-                accumulator.fuelVolume += record.fuelVolume;
-                accumulator.moneySpent += record.moneySpent;
-                return accumulator;
-            }, {
-                distance: 0,
-                fuelVolume: 0,
-                moneySpent: 0
-            }) ;
-           
+            console.log('partialrecords \n', partialTankRecords);
+            if(partialTankRecords.length > 0) {
+
+                partialTankRecords.push(dataToProcess);
+                summary = partialTankRecords.reduce((accumulator, record) => {
+                    accumulator.distance += record.distance;
+                    accumulator.fuelVolume += record.fuelVolume;
+                    accumulator.moneySpent += record.moneySpent;
+                    return accumulator;
+                }, {
+                    distance: 0,
+                    fuelVolume: 0,
+                    moneySpent: 0
+                }) ;
             
-            summary.fuelVolume = parseFloat(summary.fuelVolume.toFixed(2));
-            summary.moneySpent = parseFloat(summary.moneySpent.toFixed(2));
-            summary.fuelConsumption = parseFloat((summary.fuelVolume / summary.distance * 100).toFixed(2));
-            // console.log('partial tank records summary\n', summary );
+                
+                summary.fuelVolume = parseFloat(summary.fuelVolume.toFixed(2));
+                summary.moneySpent = parseFloat(summary.moneySpent.toFixed(2));
+                summary.fuelConsumption = parseFloat((summary.fuelVolume / summary.distance * 100).toFixed(2));
+                // console.log('partial tank records summary\n', summary );
 
-            summary.fuelPrice = cutToTwoDecimals(summary.moneySpent / summary.fuelVolume);
+                summary.fuelPrice = cutToTwoDecimals(summary.moneySpent / summary.fuelVolume);
+                summary.totalMileage = dataToProcess.totalMileage;
+                // console.log('data = \n', data);
 
-            // console.log('data = \n', data);
-
-            summary.date = now.toLocaleDateString("ru-RU");
-            summary.time = now.toLocaleTimeString({ hour12 : false });
-            summary.isSummary = true;
-            const summaryId = generateId();
-            summary.summaryId = summaryId;
-
-            //add unique ID to records
-            partialTankRecords.forEach(elem => { 
-                elem.summaryId = summaryId;
-                elem.processed = true;
-                elem.processedAt = now.toISOString();
-             });
-            // await updateRecords(partialTankRecords);
-            console.log('Records updated\n', partialTankRecords);
+                summary.date = now.toLocaleDateString("ru-RU");
+                summary.time = now.toLocaleTimeString({ hour12 : false });
+                summary.isSummary = true;
+                const summaryId = generateId();
+                summary.summaryId = summaryId;
+                summary.userId = id;
+                //add unique ID to records
+                partialTankRecords.forEach(elem => { 
+                    elem.summaryId = summaryId;
+                    elem.processed = true;
+                    elem.processedAt = now.toISOString();
+                    console.log("partial records updated", elem);
+                });
+                
+                await updateRecords(partialTankRecords);
+                //console.log('Records updated\n', partialTankRecords);
+            }
         }
        
         return { dataToProcess, summary };

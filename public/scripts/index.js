@@ -231,8 +231,9 @@ addRecordForm.addEventListener('submit', async (e) => {
             body: JSON.stringify(validatedData.formData),
         });
         const data = await response.json();
-
-        insertDataToHtml(data);
+       
+        insertDataToHtml(data.dataToProcess);
+        addRecordForm.submit();
         addRecordForm.reset();
         
         lastMileage = data.totalMileage;
@@ -273,22 +274,23 @@ async function getHistory() {
 // </div>
 function generateHistory(history) {
     contentBlocks.historyBlock.innerHTML = '';
-    history.data.reverse();
+    // history.data.reverse();
     
     for (let i = 0; i < history.data.length; i++){
         const elem = history.data[i];
         const innerHTMLText = `<div class="row">
-                            <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>
-                        </div>
-                        <hr>
-                        <div class="row ps-2 ps-sm-0">
-                            <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
-                            <div class="col-12 col-sm-6 text-left"><b>Distance : </b>${elem.distance} km</div>
-                            <div class="col-12 col-sm-6 text-left"><b>Fueled : </b>${elem.fuelVolume} L</div>
-                            <div class="col-12 col-sm-6 text-left"><b>Fuel price : </b>${elem.fuelPrice} Zł/L</div>
-                            <div class="col-12 col-sm-6 text-left"><b>Fuel cost : </b>${elem.moneySpent} Zł</div>
-                            <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
-                        </div>`;
+                                    ${elem.isSummary === true ? '<div class="text-primary fw-bold"> summary </div>' : ''}
+                                    <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>
+                                </div>
+                                <hr>
+                                <div class="row ps-2 ps-sm-0">
+                                    <div class="col-12 col-sm-6 text-left"><b>Mileage : </b>${elem.totalMileage} km</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Distance : </b>${elem.distance} km</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Fueled : </b>${elem.fuelVolume} L</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Fuel price : </b>${elem.fuelPrice} Zł/L</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Fuel cost : </b>${elem.moneySpent} Zł</div>
+                                    <div class="col-12 col-sm-6 text-left"><b>Consumption : </b>${elem.fuelConsumption} L/100km</div>
+                                </div>`;
         const rowDiv = document.createElement('div');
         rowDiv.className = "row px-1";
         
@@ -296,8 +298,8 @@ function generateHistory(history) {
         colDiv.className = "col border rounded-1 mt-2 p-2";
         colDiv.innerHTML = innerHTMLText;
         rowDiv.appendChild(colDiv);
-
-        if (history.data[i].fullTank === true && (i < history.data.length -1) && history.data[i+1].fullTank === false ) {
+// && (i < history.data.length -1) && history.data[i+1].fullTank === false
+        if (history.data[i].isSummary === true  ) {
             //create accordion
             console.log('accordion');
             const accordion = document.createElement('div');
@@ -322,11 +324,14 @@ function generateHistory(history) {
             const accordionBody = document.createElement('div');
             accordionBody.className = "accordion-body accordion-bg";
 
-            while (i + 1 < history.data.length && history.data[i + 1].fullTank === false){
+            const summaryId = history.data[i].summaryId;
+            while (history.data[i+1].summaryId === summaryId){
                 i++;
                 const elem = history.data[i];
+
                 accordionBody.innerHTML += `<div class="col border rounded-1 mt-2 p-2 bg-white">
-                                                <div class="text-danger fw-bold"> underfueled </div>
+                                                ${elem.fullTank === false ? '<div class="text-danger fw-bold"> underfueled </div>' : ''}
+                                                
                                                 <div class="row">
                                                     <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>
                                                 </div>
@@ -346,16 +351,19 @@ function generateHistory(history) {
             accordionItem.appendChild(accordionTarget);
             accordion.appendChild(accordionItem);
             colDiv.appendChild(accordion);
+            
+            if(elem.fullTank === false) {
+                console.log("element to check fullTant", elem);
+                let redBlock = document.createElement('div');
+                redBlock.className = "text-danger fw-bold";
+                redBlock.textContent = 'underfueled';
+                colDiv.prepend(redBlock);
+            }
         }
         
         rowDiv.appendChild(colDiv);
         contentBlocks.historyBlock.appendChild(rowDiv);
-        if(elem.fullTank === false) {
-            let redBlock = document.createElement('div');
-            redBlock.className = "text-danger fw-bold";
-            redBlock.textContent = 'underfueled';
-            colDiv.prepend(redBlock);
-        }
+        
     }
 }
 // Statistic

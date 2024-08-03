@@ -25,24 +25,29 @@ app.post('/addRecord', async (req, res) => {
     const record = req.body;
     const userId = req.body.userId;
     const processedData = await processData(record, userId);
+
     if(processedData == null){
       res.status(500).json({ error : 'Error while data validating' });
       return;
     }
-    console.log('processed data = ' + processedData)
-    Object.keys(processedData).forEach( key => {
-      if(processedData[key]) {
-        // const insert = await insertMileageRecord(processedData);
-        // if(!insert.success){
-        //   throw new Error('Record inserting failed');
-        // }
+    console.log('processed data = ' + JSON.stringify(processedData))
+
+    for (const key in processedData) {
+      console.log("keys in processedData" ,key);
+      if(processedData.hasOwnProperty(key) && processedData[key]) {
+        const insert = await insertMileageRecord(processedData[key]);
+        if(!insert.success){
+          throw new Error('Record inserting failed');
+        }
         console.log('elem', processedData[key]);
       }
-    });
+      
+    };
     
     
-    delete processedData.userId;
-    delete processedData._id;
+    delete processedData.dataToProcess.userId;
+    delete processedData.dataToProcess._id;
+    
     res.status(200).json(processedData);
   } catch (error) {
       console.error(error.message);
