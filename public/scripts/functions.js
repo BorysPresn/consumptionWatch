@@ -7,7 +7,7 @@ export function getCookie(name) {
     return null;
 }
 
-export function getAndValidateInputs(ids, id, lastMileage){
+export function getAndValidateInputs(ids, id, lastMileage,){
     const result = {
         isValid: true,
         errorMessage: '',
@@ -56,7 +56,43 @@ export function getAndValidateInputs(ids, id, lastMileage){
     console.log(result.formData)
     return result;
 }
+export async function handleSuccessfullLogin(params, authItems, contentItems, errorBlock, form) {
+    const {userId, initialMileage} = params;
+    sessionStorage.setItem('initialMileage', initialMileage);
+    document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
+    showBlock('mainContentBlock', authItems);
+    showBlock("addRecordBlock", contentItems);
+    document.querySelectorAll(`[data-target="addRecordBlock"]`).forEach(elem => elem.classList.add('active'));
+    errorBlock.textContent = '';
+    form.reset();
+    
+}
 
+export function checkAuthorization(){
+    const cookie = getCookie('userId');
+    return cookie ? cookie : false;
+}
+
+export async function fetchRecordData(id = getCookie('userId')) {
+    try{
+        const response = await fetch(`/lastRecord?userId=${id}`, {
+            method : 'GET',
+            headers: {
+                'Content-Type' : 'application/json',
+            },
+        });
+        if(!response.ok){
+            console.log('no data to insert \n getting initial mileage from USERS COLL');
+            document.getElementById('lastRecordBlock').hidden = true;
+        } else {
+            document.getElementById('lastRecordBlock').removeAttribute('hidden');
+            const data = await response.json();
+            return data;
+        }
+    } catch (error) {
+        console.log("error")
+    }
+}
 
 // function getElements(arrayOfIds){
 //     const result = [];
@@ -70,11 +106,23 @@ export function getAndValidateInputs(ids, id, lastMileage){
 //     console.log('result\n', result)
 //     return result;
 // }
+export function logout(authItems){
+    document.cookie = `token=;path=/;max-age=0;secure`;
+    document.cookie = `userId=;path=/;max-age=0;secure`;
+    sessionStorage.clear();
+    showBlock('loginBlock', authItems);
+    clearContentElems();
+}
 
-export function insertDataToHtml(data) {
-    document.getElementById('underfueled').hidden = true;
+export function insertData(data) {
+    const tankStatusElem = document.getElementById('tankStatus');
     if(data.fullTank === false){
-        document.getElementById('underfueled').hidden = false;
+        tankStatusElem.innerText = 'tank was underfueled';
+        tankStatusElem.className = 'fw-bold text-danger';
+    }
+    if(data.isSummary === true){
+        tankStatusElem.innerText = '\t summary';
+        tankStatusElem.className = 'fw-bold text-primary';
     }
     Object.keys(data).forEach(key => {
         
@@ -87,7 +135,6 @@ export function insertDataToHtml(data) {
 }
 
 export function showBlock(blockName, blockArray) {
-    
 
     let blockToShow = null;
     blockArray.forEach(elem => {
@@ -100,8 +147,8 @@ export function showBlock(blockName, blockArray) {
     blockToShow = null;
 }
 
-export function clearBlocks(){
-    document.getElementById('underfueled').setAttribute('hidden', true);
+export function clearContentElems(){
+    document.getElementById('tankStatus').innerText = '';
     document.getElementById('historyBlock').innerHTML = '';
     document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
     Array.from(document.getElementById('lastRecordBlock').querySelectorAll('.text')).forEach(elem => elem.textContent = '--');

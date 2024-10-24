@@ -1,12 +1,22 @@
-import { getCookie, getAndValidateInputs, insertDataToHtml, showBlock, clearBlocks, showError, removeError }  from "./functions.js"
+import { getCookie, 
+    getAndValidateInputs, 
+    insertData, showBlock, 
+    clearContentElems, 
+    showError, 
+    removeError, 
+    handleSuccessfullLogin, 
+    checkAuthorization,
+    fetchRecordData,
+    logout
+}  from "./functions.js";
+
 let lastMileage = null;
 
-let authBlocks = {
+let authItems = Object.values({
     loginBlock : document.getElementById('loginBlock'),
     registerBlock : document.getElementById('registerBlock'),
     mainContentBlock : document.getElementById('mainContentBlock')
-};
-const authItems = Object.values(authBlocks);
+});
 
 let contentBlocks = {
     addRecordBlock : document.getElementById('addRecordBlock'),
@@ -18,8 +28,18 @@ let contentBlocks = {
 const contentItems = Object.values(contentBlocks);
 
 //checking authorization
-document.addEventListener('DOMContentLoaded', checkAuthorization);
-
+document.addEventListener('DOMContentLoaded', async () => {
+    const authorized = checkAuthorization()
+    if(authorized){
+        showBlock('mainContentBlock', authItems);
+        showBlock("addRecordBlock", contentItems);
+        const record = await fetchRecordData();
+        insertData(record)
+    } else {
+        logout(authItems);
+        return;
+    }
+});
 
 //Login
 document.getElementById('registerLink').addEventListener('click', function() { 
@@ -29,12 +49,11 @@ document.getElementById('registerLink').addEventListener('click', function() {
 document.getElementById('login-form').addEventListener('submit', async function (e){
     e.preventDefault();
     let loginErrorBlock = document.getElementById('loginErrorBlock');
+    let loginForm = document.getElementById('login-form');
     const formData = {
-        email : document.getElementById('login-email').value,
-        password : document.getElementById('login-password').value,
+        email : loginForm.email.value,
+        password : loginForm.password.value,
     };
-    // console.log(formData)
-    // sending data to server
     const response = await fetch('/login', {
         method: 'POST',
         headers: {
@@ -42,21 +61,16 @@ document.getElementById('login-form').addEventListener('submit', async function 
         },
         body: JSON.stringify(formData),
     });
-    const {userId, token, message, initialMileage} = await response.json();
+    const data = await response.json();
     // console.log(response)
     if(response.ok) {
-        sessionStorage.setItem('initialMileage', initialMileage);
-        document.cookie = `token=${token};path=/;max-age=1800;secure`;
-        document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
-        showBlock('mainContentBlock', authItems);
-        showBlock("addRecordBlock", contentItems);
-        document.querySelectorAll(`[data-target="addRecordBlock"]`).forEach(elem => elem.classList.add('active'));
-        loginErrorBlock.textContent = '';
-        await checkAuthorization();
+        await handleSuccessfullLogin(data, authItems, contentItems, loginErrorBlock, loginForm);
+        const record = await fetchRecordData(data.userId);
+        insertData(record);
+        lastMileage = record.totalMileage;
         return;
     } else {
-        console.log(response, message)
-        loginErrorBlock.textContent = message;
+        loginErrorBlock.textContent = data.message;
         return;
     }
 });
@@ -66,18 +80,19 @@ document.getElementById('loginLink').addEventListener('click', function() {
     showBlock('loginBlock', authItems); 
     return;
 });
-document.getElementById('registration-form').addEventListener('submit', async function(e){
+document.getElementById('register-form').addEventListener('submit', async function(e){
     e.preventDefault(); 
     let errorBlock = document.getElementById('registerErrorBlock');
-    const mileageInput = document.getElementById('initial-mileage');
+    const registerForm = document.getElementById('register-form');
     const formData = {
-        email : document.getElementById('register-email').value,
-        password : document.getElementById('register-password').value,
-        initialMileage : parseFloat(mileageInput.value)
+        email : registerForm.email.value,
+        password : registerForm.password.value,
+        initialMileage : parseFloat(registerForm['initial-mileage'].value)
     };
     if(formData.initialMileage < 0 || !formData.initialMileage){
-        mileageInput.classList.add('error');
+        registerForm['initial-mileage'].classList.add('error');
         errorBlock.textContent = "Only positive numbers are alowed!";
+        return;
     }
     // sending data to server
     const response = await fetch('/register', {
@@ -88,76 +103,16 @@ document.getElementById('registration-form').addEventListener('submit', async fu
         body: JSON.stringify(formData),
     });
 
-    const {userId, token, message, initialMileage} = await response.json();
-    if(userId && token) {
-        sessionStorage.setItem('initialMileage', initialMileage);
-        document.cookie = `token=${token};path=/;max-age=1800;secure`;
-        document.cookie = `userId=${userId};path=/;max-age=1800;secure`;
-        showBlock('mainContentBlock', authItems);
-        showBlock("addRecordBlock", contentItems);
-        document.querySelectorAll(`[data-target="addRecordBlock"]`).forEach(elem => elem.classList.add('active'));
-        errorBlock.textContent = '';
-        mileageInput.classList.remove('error');
-        await checkAuthorization();
+    const data = await response.json();
+    if(response.ok) {
+        registerForm['initial-mileage'].classList.remove('error');
+        await handleSuccessfullLogin(data, errorBlock, registerForm)
     } else {
-        errorBlock.textContent = message;
+        errorBlock.textContent = data.message;
         return;
     }
     // console.log('Response:', {userId, token, message, initialMileage});
 });
-
-
-async function checkAuthorization(){
-    try {
-        const cookie = getCookie('token');
-
-        if(!cookie) {
-            showBlock("loginBlock", authItems);
-            return;
-        }
-        
-        showBlock("mainContentBlock", authItems);
-        showBlock("addRecordBlock", contentItems);
-
-        const userId = getCookie('userId');
-        const response = await fetch(`/lastRecord?userId=${userId}`, {
-            method : 'GET',
-            headers: {
-                'Content-Type' : 'application/json',
-            },
-        });
-        if(!response.ok){
-            console.log('no data to insert \n getting initial mileage from USERS COLL');
-            document.getElementById('lastRecordBlock').hidden = true;
-            // const response = await fetch(`/initialMilaege?userId=${userId}`, {
-            //     method: 'GET',
-            //     headers: {
-            //         'Content-Type' : 'application/json',
-            //     },
-            // });
-            // if(!response.ok) {
-            //     console.log(response.status)
-            //     return;
-            // } else {    
-            //     const data = await response.json();
-            //     data.totalMileage = data.initialMileage;
-            //     delete data.initialMileage;
-                
-            //     insertDataToHtml(data);
-            //     return;
-            // }
-
-        } else {
-            document.getElementById('lastRecordBlock').removeAttribute('hidden');
-            const data = await response.json();
-            // console.log('authorization',data);
-            insertDataToHtml(data);
-            lastMileage = data.totalMileage
-        }
-    } catch (error) {
-        console.log("error")
-    }
-};
 
 //logout button
 
@@ -169,11 +124,7 @@ logoutButtons.forEach(element => {
         if (bsOffcanvas) {
             bsOffcanvas.hide();
         }
-        document.cookie = `token=;path=/;max-age=0;secure`;
-        document.cookie = `userId=;path=/;max-age=0;secure`;
-        sessionStorage.clear();
-        showBlock('loginBlock', authItems);
-        clearBlocks();
+        logout(authItems);
     })
 });
 
@@ -182,11 +133,6 @@ logoutButtons.forEach(element => {
 let sidebarArray = document.querySelectorAll('.sidebar');
 sidebarArray.forEach(elem => elem.addEventListener('click', async (e) =>{
     try {
-        const cookie = getCookie('token');
-        if(!cookie) {
-            showBlock("loginBlock", authItems);
-            return;
-        }
         const target = e.target.closest('.nav-item');
         if(target){
             document.querySelectorAll('.nav-item.active').forEach(elem => elem.classList.remove('active'));
@@ -232,7 +178,7 @@ addRecordForm.addEventListener('submit', async (e) => {
         });
         const data = await response.json();
        
-        insertDataToHtml(data.dataToProcess);
+        insertData(data.dataToProcess);
         addRecordForm.submit();
         addRecordForm.reset();
         
@@ -245,14 +191,10 @@ addRecordForm.addEventListener('submit', async (e) => {
 // History
 async function getHistory() {
     try {
-        const userId = getCookie('userId');
-
+        const userId = checkAuthorization();
         if(!userId){
-            console.log('no userId');
-            showBlock('loginBlock', authItems);
-            return;
+            logout(authItems);
         }
-
         const response = await fetch(`/history?userId=${userId}`,{
             method : 'GET',
             headers : {
@@ -263,22 +205,19 @@ async function getHistory() {
             throw new Error(`HTTP error! status: ${response.status}`)
         }
         const history = await response.json();
-        console.log(history)
         return history;
     } catch (error) {
         console.error(error)
     }
 }
-// <div class="col-1 text-end">
-//     <button type="button" class="btn-close" aria-label="Close"></button>
-// </div>
+
 function generateHistory(history) {
     contentBlocks.historyBlock.innerHTML = '';
-    // history.data.reverse();
     
     for (let i = 0; i < history.data.length; i++){
         const elem = history.data[i];
         const innerHTMLText = `<div class="row">
+                                    ${elem.fullTank === false ? '<div class="text-danger fw-bold"> underfueled </div>' : ''}
                                     ${elem.isSummary === true ? '<div class="text-primary fw-bold"> summary </div>' : ''}
                                     <div class="col pe-0"id="history-date"><b>${elem.date} at ${elem.time}</b></div>
                                 </div>
@@ -298,10 +237,8 @@ function generateHistory(history) {
         colDiv.className = "col border rounded-1 mt-2 p-2";
         colDiv.innerHTML = innerHTMLText;
         rowDiv.appendChild(colDiv);
-// && (i < history.data.length -1) && history.data[i+1].fullTank === false
         if (history.data[i].isSummary === true  ) {
             //create accordion
-            console.log('accordion');
             const accordion = document.createElement('div');
             accordion.className = 'accordion';
             accordion.setAttribute('id', `accordion${i}`);
@@ -371,13 +308,11 @@ function generateHistory(history) {
 async function getStatistic() {
     try {
         const userId = getCookie('userId');
-
         if(!userId){
             console.log('no userId');
             showBlock('loginBlock', authItems);
             return;
         }
-
         const period = document.getElementById('selectQuantity').value * document.getElementById('selectPeriod').value;
         console.log(period)
     } catch (error) {
